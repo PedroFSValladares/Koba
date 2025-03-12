@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Discord.Models {
-    public class GatewayInfo {
+namespace Discord.Net.Rest {
+    internal class GatewayInfo {
         public string url { get; set; }
         public int shards { get; set; }
         public SessionInfo session_start_limit { get; set; }
     }
-    public class SessionInfo {
+    internal class SessionInfo {
         public int total { get; set; }
         public int remaining { get; set; }
         public int reset_after { get; set; }
