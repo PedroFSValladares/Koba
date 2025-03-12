@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Discord.Models {
+namespace Discord.Net.Rest {
     public class GatewayInfo {
         public string url { get; set; }
         public int shards { get; set; }
