@@ -4,8 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Discord.Net.Socket {
-    internal class HeartbeatPayload : GatewayEvent{
-        public new int d { get; set; } 
+namespace Discord.Net.Socket.Events {
+    internal class Identify {
     }
 }

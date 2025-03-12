@@ -1,0 +1,53 @@
+{
+  "op": 0,
+  "d": {
+    "v": 10,
+    "user_settings": {},
+    "user": {
+      "verified": true,
+      "username": "Koba",
+      "primary_guild": null,
+      "mfa_enabled": false,
+      "id": "645321462168944640",
+      "global_name": null,
+      "flags": 0,
+      "email": null,
+      "discriminator": "8369",
+      "clan": null,
+      "bot": true,
+      "avatar": "1c016c6b658107cdb68c1f482404dfc9"
+    },
+    "session_type": "normal",
+    "session_id": "f647391399a3dce354a9e053cb5391da",
+    "resume_gateway_url": "wss://gateway-us-east1-d.discord.gg",
+    "relationships": [],
+    "private_channels": [],
+    "presences": [],
+    "guilds": [
+      {
+        "unavailable": true,
+        "id": "619200679587610673"
+      },
+      {
+        "unavailable": true,
+        "id": "861355601800331265"
+      }
+    ],
+    "guild_join_requests": [],
+    "geo_ordered_rtc_regions": [
+      "brazil",
+      "buenos-aires",
+      "santiago",
+      "atlanta",
+      "us-east"
+    ],
+    "game_relationships": [],
+    "auth": {},
+    "application": {
+      "id": "645321462168944640",
+      "flags": 8953856
+    }
+  },
+  "s": 1,
+  "t": "READY"
+}

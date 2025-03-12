@@ -6,30 +6,30 @@ using Newtonsoft.Json;
 namespace Discord {
     public class DiscordClient {
 
-        private readonly DiscordSocketClient socket;
-        private readonly DiscordRestClient restClient;
-        private readonly ClientConfiguration configs;
+        //private readonly DiscordSocketClient _socket;
+        private readonly DiscordRestClient _restClient;
+        //private readonly int _apiVersion;
 
-        public DiscordClient(ClientConfiguration clientConfigs) {
-            configs = clientConfigs;
-            restClient = new DiscordRestClient(configs.apiVersion, configs.token);
-            socket = new DiscordSocketClient(configs.token, configs.apiVersion);
-
+        public DiscordClient(DiscordSocketClient socket, DiscordRestClient restClient, int apiVersion) {
+            //_socket = socket;
+            _restClient = restClient;
+            //_apiVersion = apiVersion;
             //socket.EventReceived += OnEventReceived;
         }
-
+        /*
         public async Task StartClientAsync() {
-            var info = restClient.RequestGatewayInfo();
-            await socket.ConnecToGatewayAsync(info.url + $"/?v={configs.apiVersion}&encoding=json");
+            var info = _restClient.RequestGatewayInfo();
+            await _socket.ConnecToGatewayAsync(info.url + $"/?v={_apiVersion}&encoding=json");
         }
 
         public async Task LoginAsync() {
-            await socket.IdentifyAsync();
+            await _socket.IdentifyAsync();
         }
+        */
 
         public async Task AddCommandAsync(CommandBase command) {
             string jsonCommand = JsonConvert.SerializeObject(command);
-            var response = await restClient.Request("applications/645321462168944640/commands", jsonCommand, RestSharp.Method.Post);
+            var response = await _restClient.Request("applications/645321462168944640/commands", jsonCommand, RestSharp.Method.Post);
             Console.WriteLine("\n"+response.Content);
         } 
 
