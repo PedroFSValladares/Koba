@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Discord.Net.Socket {
-    internal class IdentifyEvent {
+    internal class IdentifyEventData {
         public string token { get; set; }
         public Intents intents { get; set; }
         public ConnectionProperties properties { get; set; }

@@ -5,7 +5,7 @@ namespace Discord.Net.Socket
     /// <summary>
     /// PayLoad com informções do evento recebido/enviado
     /// </summary>
-    public class GatewayEvent
+    public class GatewayPayload
     {
 
         /// <summary>
@@ -16,7 +16,7 @@ namespace Discord.Net.Socket
         /// <summary>
         /// Dados do Evento.
         /// </summary>
-        public dynamic d { get; set; }
+        public object? d { get; set; }
 
         /// <summary>
         /// Numero a ser utilizado nos eventos <see cref="GatewayPayloadOpCode.Resume"/> e 
