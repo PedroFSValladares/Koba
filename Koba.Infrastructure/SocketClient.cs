@@ -11,7 +11,6 @@ namespace Koba.Infrastructure
     {
         private readonly ClientWebSocket client; 
         private int bufferSize = 2048;
-        private CancellationToken token;
         private Channel<string> sendChannel, receiveMessageChannel;
 
         public SocketClient()
@@ -30,23 +29,22 @@ namespace Koba.Infrastructure
                 throw new ArgumentNullException(nameof(url), "A URL fornecida não deve ser nula.");
             
             Uri uri = new(url);
-            token = cancellationToken;
 
-            await client.ConnectAsync(uri, token);
+            await client.ConnectAsync(uri, cancellationToken);
 
             if (client.State == WebSocketState.Open)
             {
                 receiveMessageChannel = Channel.CreateUnbounded<string>();
-                _ = Task.Run(BeginListenAsync, token);
+                _ = Task.Run(() => BeginListenAsync(cancellationToken), cancellationToken);
             }
             
             return receiveMessageChannel.Reader;
         }
 
-        public async Task SendAsync(string payload) {
+        public async Task SendAsync(string payload, CancellationToken cancellationToken) {
             byte[] buffer = Encoding.UTF8.GetBytes(payload);
 
-            if(client.State != WebSocketState.Open && !token.IsCancellationRequested)
+            if(client.State != WebSocketState.Open && !cancellationToken.IsCancellationRequested)
             {
                 throw new InvalidOperationException(
                     "Conexão do socket foi encerrada, não é possível enviar a mensagem");
@@ -54,7 +52,7 @@ namespace Koba.Infrastructure
             await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Binary, true, CancellationToken.None);
         }
 
-        private async Task BeginListenAsync()
+        private async Task BeginListenAsync(CancellationToken cancellationToken)
         {
             byte[] buffer = new byte[bufferSize];
             Memory<byte> receiveBuffer = new Memory<byte>(buffer);
@@ -62,15 +60,15 @@ namespace Koba.Infrastructure
             ValueWebSocketReceiveResult result;
             ChannelWriter<string> channelWriter = receiveMessageChannel.Writer;
 
-            while (!token.IsCancellationRequested) {
+            while (!cancellationToken.IsCancellationRequested) {
                 do {
-                    result = await client.ReceiveAsync(receiveBuffer, token);
+                    result = await client.ReceiveAsync(receiveBuffer, cancellationToken);
                     received.AddRange(new ArraySegment<byte>(buffer, 0, result.Count));
                 } while(!result.EndOfMessage);
                 
                 string jsonPaylod = Encoding.UTF8.GetString(received.ToArray());
                 
-                await channelWriter.WriteAsync(jsonPaylod, token);
+                await channelWriter.WriteAsync(jsonPaylod, cancellationToken);
 
                 received.Clear();
             }
