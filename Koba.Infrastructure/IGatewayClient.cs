@@ -1,8 +1,10 @@
-﻿namespace Koba.Infrastructure;
+﻿using System.Threading.Channels;
+
+namespace Koba.Infrastructure;
 
 public interface IGatewayClient
 {
-    Task ConnectAsync(string url, CancellationToken cancellationToken);
+    Task<ChannelReader<string>> ConnectAsync(string url, CancellationToken cancellationToken);
     void CloseAsync();
     Task SendAsync(string data);
 }
