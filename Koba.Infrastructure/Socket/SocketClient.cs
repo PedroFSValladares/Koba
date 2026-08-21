@@ -1,8 +1,9 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Channels;
+using Koba.Infrastructure.Socket.Interfaces;
 
-namespace Koba.Infrastructure
+namespace Koba.Infrastructure.Socket
 {
     public delegate Task SocketMessageReceivedEventHandler(string payload);
     public delegate void SocketComunicationFailedEventHandler(ClientWebSocket socket, Exception exception);

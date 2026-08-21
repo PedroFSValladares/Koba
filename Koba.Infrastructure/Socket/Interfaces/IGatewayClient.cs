@@ -1,6 +1,4 @@
-﻿using System.Threading.Channels;
-
-namespace Koba.Infrastructure;
+﻿namespace Koba.Infrastructure.Socket.Interfaces;
 
 public interface IGatewayClient
 {

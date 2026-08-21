@@ -1,7 +1,6 @@
-﻿using System.Runtime.InteropServices;
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
 
-namespace Koba.Infrastructure;
+namespace Koba.Infrastructure.Socket;
 
 public class GatewayChannel
 {
