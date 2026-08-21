@@ -64,20 +64,35 @@ namespace Koba.Infrastructure.Socket
             ValueWebSocketReceiveResult result;
             ChannelWriter<string> channelWriter = receiveMessageChannel.Writer;
 
-            while (!cancellationToken.IsCancellationRequested) {
-                do {
-                    result = await client.ReceiveAsync(receiveBuffer, cancellationToken);
-                    received.AddRange(new ArraySegment<byte>(buffer, 0, result.Count));
-                } while(!result.EndOfMessage);
-                
-                string jsonPaylod = Encoding.UTF8.GetString(received.ToArray());
-                
-                await channelWriter.WriteAsync(jsonPaylod, cancellationToken);
+            try
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    do
+                    {
+                        result = await client.ReceiveAsync(receiveBuffer, cancellationToken);
+                        received.AddRange(new ArraySegment<byte>(buffer, 0, result.Count));
+                    } while (!result.EndOfMessage);
 
-                received.Clear();
+                    string jsonPaylod = Encoding.UTF8.GetString(received.ToArray());
+
+                    await channelWriter.WriteAsync(jsonPaylod, cancellationToken);
+
+                    received.Clear();
+                }
             }
-
-            channelWriter.Complete();
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("Execução do socket foi encerrada.");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+            }
+            finally
+            {
+                channelWriter.TryComplete();
+            }
         }
     }
 }
