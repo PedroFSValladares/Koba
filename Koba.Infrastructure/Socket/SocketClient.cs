@@ -5,9 +5,6 @@ using Koba.Infrastructure.Socket.Interfaces;
 
 namespace Koba.Infrastructure.Socket
 {
-    public delegate Task SocketMessageReceivedEventHandler(string payload);
-    public delegate void SocketComunicationFailedEventHandler(ClientWebSocket socket, Exception exception);
-
     public class SocketClient : IGatewayClient
     {
         private readonly ClientWebSocket client; 
