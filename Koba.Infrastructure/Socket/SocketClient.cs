@@ -11,9 +11,9 @@ namespace Koba.Infrastructure.Socket
         private readonly ClientWebSocket client; 
         private int bufferSize = 2048;
         private readonly Channel<string> sendMessageChannel, receiveMessageChannel;
-        private readonly ILogger logger;
+        private readonly ILogger<SocketClient> logger;
 
-        public SocketClient(ClientWebSocket client, Channel<string> sendMessageChannel, Channel<string> receiveMessageChannel, ILogger logger)
+        public SocketClient(ClientWebSocket client, Channel<string> sendMessageChannel, Channel<string> receiveMessageChannel, ILogger<SocketClient> logger)
         {
             this.client = client;
             this.sendMessageChannel = sendMessageChannel;
