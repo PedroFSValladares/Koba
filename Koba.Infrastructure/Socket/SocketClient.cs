@@ -86,6 +86,13 @@ namespace Koba.Infrastructure.Socket
                     do
                     {
                         result = await client.ReceiveAsync(receiveBuffer, cancellationToken);
+
+                        if (result.MessageType == WebSocketMessageType.Close)
+                        {
+                            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken);
+                            return;
+                        }
+
                         received.AddRange(new ArraySegment<byte>(buffer, 0, result.Count));
                     } while (!result.EndOfMessage);
 
