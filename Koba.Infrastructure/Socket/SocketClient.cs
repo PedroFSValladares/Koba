@@ -6,8 +6,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Koba.Infrastructure.Socket
 {
-    public class SocketClient : IGatewayClient
+    internal class SocketClient : IGatewayClient, IRawSocket
     {
+        public ChannelWriter<string> GetOutputChannel() =>  sendMessageChannel.Writer;
+
+        public event Func<OnEventReceivedData, Task> OnEventReceived;
+        
         private readonly ClientWebSocket client; 
         private int bufferSize = 2048;
         private readonly Channel<string> sendMessageChannel, receiveMessageChannel;
@@ -99,8 +103,9 @@ namespace Koba.Infrastructure.Socket
                     string jsonPaylod = Encoding.UTF8.GetString(received.ToArray());
                     
                     logger.LogDebug($"Payload recebido: {jsonPaylod}.");
-
-                    await channelWriter.WriteAsync(jsonPaylod, cancellationToken);
+                    
+                    OnEventReceivedData eventData = new OnEventReceivedData(jsonPaylod, cancellationToken);
+                    _ = Task.Run(() => OnEventReceived.Invoke(eventData), cancellationToken);
 
                     received.Clear();
                 }
@@ -119,6 +124,20 @@ namespace Koba.Infrastructure.Socket
                 bool closeResult = channelWriter.TryComplete();
                 logger.LogInformation($"Canal finalizado com sucesso: {closeResult}.");
             }
+        }
+
+        public async Task SendAsync(string message, CancellationToken cancellationToken)
+        {
+            logger.LogInformation($"Task de envio iniciada");
+            var buffer = Encoding.UTF8.GetBytes(message);
+            
+            if(client.State != WebSocketState.Open && !cancellationToken.IsCancellationRequested)
+                throw new InvalidOperationException(
+                    "Conexão do socket foi encerrada, não é possível enviar a mensagem");
+            
+            await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, cancellationToken);
+           
+            logger.LogInformation("Mensagem enviada com sucesso");
         }
     }
 }
