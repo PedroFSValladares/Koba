@@ -64,7 +64,7 @@ namespace Koba.Infrastructure.Socket
                     throw new InvalidOperationException(
                         "Conexão do socket foi encerrada, não é possível enviar a mensagem");
                 
-                await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Binary, true, cancellationToken);
+                await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, cancellationToken);
             }
             logger.LogInformation($"Task de envio encerrada");
         }
