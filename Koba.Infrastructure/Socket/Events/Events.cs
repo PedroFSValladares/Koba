@@ -5,8 +5,9 @@ namespace Koba.Infrastructure.Socket.Events;
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "op")]
 [JsonDerivedType(typeof(HelloEvent), typeDiscriminator: 10)]
 [JsonDerivedType(typeof(HeartBeatEvent), typeDiscriminator: 1)]
-[JsonDerivedType(typeof(HeartBeatAckEvent), typeDiscriminator: 11)]
 [JsonDerivedType(typeof(ReconnectEvent), typeDiscriminator: 7)]
+[JsonDerivedType(typeof(HeartBeatAckEvent), typeDiscriminator: 11)]
+[JsonDerivedType(typeof(InvalidSessionEvent), typeDiscriminator: 9)]
 internal abstract record EventBase(int op, int? s, string? t);
 
 internal abstract record HelloEvent(int op, HelloData d, int? s, string? t) : EventBase(op, s, t);
