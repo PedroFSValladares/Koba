@@ -1,6 +1,6 @@
 ﻿namespace Koba.Infrastructure.Socket;
 
-internal class OnEventReceivedData
+public class OnEventReceivedData
 {
     internal string Data;
     internal CancellationToken CancellationToken;

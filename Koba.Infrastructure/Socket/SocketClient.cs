@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Koba.Infrastructure.Socket
 {
-    internal class SocketClient : IGatewayClient, IRawSocket
+    public class SocketClient : IGatewayClient, IRawSocket
     {
         public ChannelWriter<string> GetOutputChannel() =>  sendMessageChannel.Writer;
 
