@@ -12,11 +12,11 @@ internal class GatewayManager
 {
     private readonly IRawSocket socket;
     private readonly ILogger<GatewayManager> logger;
-    private readonly Dictionary<string, string> cache;
+    private readonly SessionState cache;
     
     private Timer heartbeatTimer;
 
-    private GatewayManager(IRawSocket socket, ILogger<GatewayManager> logger, Dictionary<string, string> cache)
+    private GatewayManager(IRawSocket socket, ILogger<GatewayManager> logger, SessionState cache)
     {
         this.socket = socket;
         this.logger = logger;
@@ -33,7 +33,7 @@ internal class GatewayManager
         int? sequencialNumber = parsedEvent.s;
         
         if (sequencialNumber != null)
-            cache.TryAdd("sequencialNumber", sequencialNumber.ToString());
+            cache.sequencialNumber = sequencialNumber;
 
         switch (parsedEvent)
         {
@@ -69,9 +69,12 @@ internal class GatewayManager
     {
         CancellationToken cancellationToken = (CancellationToken)(state ?? CancellationToken.None);
         int? sequencialNumber = null;
-        
-        if (cache.TryGetValue("sequencialNumber", out string? cacheValue))
-            sequencialNumber = Convert.ToInt32(cacheValue);
+
+        if (cache.sequencialNumber != null)
+        {
+            string cacheValue = cache.sequencialNumber.ToString()!;
+             sequencialNumber = Convert.ToInt32(cacheValue);
+        }
         
         if (state is not CancellationToken)
             logger.LogWarning("Token de cancelamento não recebido no envio do HeartBeat. Comportamentos inesperados ao desconectar podem ocorrer.");
