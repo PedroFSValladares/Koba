@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Koba.Infrastructure.Socket.EventData;
 
 namespace Koba.Infrastructure.Socket.Events;
 
@@ -15,6 +16,7 @@ internal record HeartBeatEvent(int op, int d, int? s, string? t)  : EventBase(op
 internal abstract record HeartBeatAckEvent(int op, int? s, string? t) : EventBase(op, s, t);
 internal abstract record ReconnectEvent(int op, int? s, string? t) : EventBase(op, s, t);
 internal abstract record InvalidSessionEvent(int op, bool d, int? s, string? t) : EventBase(op, s, t);
+internal abstract record ReadyEvent(int v, User user, UnavailableGuild guild, string session_id, string resume_gateway_url, int[]? shard, DiscordApplication application);
 
 internal abstract record HelloData(int heartbeat_interval); 
 internal record ResumeData(string token, string session_id, int seq);
