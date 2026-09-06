@@ -1,4 +1,4 @@
-﻿using Koba.Core;
+using Koba.Core;
 using Koba.DiscordEvents;
 using Koba.BotSocket;
 using Microsoft.Extensions.Logging;

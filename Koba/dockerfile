@@ -1,0 +1,12 @@
+FROM bitnami/dotnet-sdk:latest AS build
+
+RUN mkdir -p /app
+WORKDIR /app
+COPY . ./
+RUN dotnet restore
+RUN dotnet publish -o /appOut
+
+FROM bitnami/dotnet:latest AS runtime
+WORKDIR /app
+COPY --from=build ./appOut .
+ENTRYPOINT [ "dotnet", "Koba.dll" ]

@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Itens de Solução", "Itens
 		.gitignore = .gitignore
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MySqlApi", "MySqlApi\MySqlApi.csproj", "{9BBC2FF2-1E1D-456E-BAAF-1A60FA87E483}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,11 +23,18 @@ Global
 		{F357738C-874E-4224-A266-3D58AAFBE6E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F357738C-874E-4224-A266-3D58AAFBE6E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F357738C-874E-4224-A266-3D58AAFBE6E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BBC2FF2-1E1D-456E-BAAF-1A60FA87E483}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BBC2FF2-1E1D-456E-BAAF-1A60FA87E483}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BBC2FF2-1E1D-456E-BAAF-1A60FA87E483}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BBC2FF2-1E1D-456E-BAAF-1A60FA87E483}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BB1C39-42C8-4EBF-8E2D-B6FB2D3F94E2}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9BBC2FF2-1E1D-456E-BAAF-1A60FA87E483} = {71277A36-E0E9-4903-A202-CAA8BC253EEB}
 	EndGlobalSection
 EndGlobal

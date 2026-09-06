@@ -46,7 +46,7 @@ namespace Koba.Core
                     configure.TimestampFormat = "[HH:mm:ss] ";
                     configure.SingleLine = true;
                 });
-                builder.AddProvider(new BotLoggerProvider(new StreamWriter(logPath, true)));
+                //builder.AddProvider(new BotLoggerProvider(new StreamWriter(logPath, true)));
             }).CreateLogger<KobaCore>();
 
             appQueues = new QueueManager();
@@ -66,7 +66,8 @@ namespace Koba.Core
             logger.LogInformation("Iniciando aplicação...");
 
             var request = new RestRequest(@"https://discord.com/api/v10/gateway/bot", Method.Get);
-            request.AddHeader("Authorization", $"Bot {Env.GetString("BOT_TOKEN")}");
+            //request.AddHeader("Authorization", $"Bot {Env.GetString("BOT_TOKEN")}");
+            request.AddHeader("Authorization", $"Bot {Environment.GetEnvironmentVariable("BOT_TOKEN")}");
             var response = restClient.Get(request);
 
             if(response.IsSuccessStatusCode == false) {
@@ -134,7 +135,9 @@ namespace Koba.Core
 
         private void LogUnknowEvent(DiscordEvent discordEvent) {
             logger.LogWarning($"Evento desconhecido recebido:");
+            /*
             logger.LogWarning($"{discordEvent.ToString()}");
+            */
         }
 
         private void SocketError(ClientWebSocket socket, Exception exception) {

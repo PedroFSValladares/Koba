@@ -1,0 +1,57 @@
+services:
+  koba:
+    container_name: bot
+    restart: unless-stopped
+    build: 
+      context: ./koba
+      dockerfile: dockerfile
+    env_file:
+      - ./Koba/.env
+    networks:
+      - bot-net
+
+  database-api:
+    container_name: mysql-api
+    restart: unless-stopped
+    build: 
+      context: ./MySqlApi
+      dockerfile: dockerfile
+    environment:
+      - MySQLConnectionString=server=koba-database;port=3306;database=koba-db;user=user;password=password
+    ports: [5000:5000]
+    depends_on:
+      - database
+    networks:
+      - bot-net
+      - api-net
+
+  database:
+    image: mysql:8.0
+    container_name: koba-database
+    env_file:
+      - database.env
+    ports: [3306:3306]
+    volumes: [koba-data:/var/lib/mysql]
+    networks:
+      - api-net
+
+  phpmyadmin:
+    image: phpmyadmin:fpm-alpine
+    container_name: phpmyadmin
+    env_file:
+      - database.env
+    environment:
+      - PMA_ARBITRARY=1
+    ports: [3306:3306]
+    expose:
+      - 3306
+    networks:
+      - api-net
+
+volumes:
+  koba-data:
+
+networks:
+  bot-net:
+  api-net:
+

@@ -4,22 +4,32 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
     <UserSecretsId>24ac05dd-ceb6-447d-8143-80bde0d10991</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="bin\Debug\net6.0\AppSettings.json" />
+  </ItemGroup>
+<!--
+  <ItemGroup>
     <Content Include=".env">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+-->
 
   <ItemGroup>
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
-    <PackageReference Include="RestSharp" Version="112.1.0" />
+    <PackageReference Include="RestSharp" Version="114.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions">
+      <HintPath>C:\Users\pedro\.dotnet\packs\Microsoft.AspNetCore.App.Ref\9.0.15\ref\net9.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
