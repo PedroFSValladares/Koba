@@ -10,9 +10,6 @@
 
   <ItemGroup>
     <Content Include="bin\Debug\net6.0\AppSettings.json" />
-    <Content Include=".env">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>
