@@ -8,13 +8,11 @@ namespace Tests;
 
 public static class Utils
 {
-    public static IGatewayClient GetGatewayClient()
+    public static IRawSocket GetGatewayClient()
     {
         var webSocket = new System.Net.WebSockets.ClientWebSocket();
-        Channel<string> channel1 = Channel.CreateUnbounded<string>();
-        Channel<string> channel2 = Channel.CreateUnbounded<string>();
         var logger = new Mock<ILogger<SocketClient>>();
         
-        return new SocketClient(webSocket, channel1, channel2, logger.Object);
+        return new SocketClient(webSocket, logger.Object);
     }
 }
