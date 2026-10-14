@@ -6,7 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Koba.Infrastructure.Socket
 {
-    public class SocketClient : IGatewayClient, IRawSocket
+
+    internal class SocketClient : IGatewayClient, IRawSocket
     {
         public event Func<OnEventReceivedData, Task> OnMessageReceived;
         
@@ -15,13 +16,13 @@ namespace Koba.Infrastructure.Socket
         
         private readonly ILogger<SocketClient> logger;
 
-        public SocketClient(ClientWebSocket client, ILogger<SocketClient> logger)
+        internal SocketClient(ClientWebSocket client, ILogger<SocketClient> logger)
         {
             this.client = client;
             this.logger = logger;
         }
         
-        public void Close() {
+        internal void Close() {
             client.Abort();
         }
 
