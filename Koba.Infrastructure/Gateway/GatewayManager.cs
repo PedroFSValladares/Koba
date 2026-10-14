@@ -1,12 +1,11 @@
-﻿using System.Reflection.Metadata;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Threading.Channels;
 using Koba.Infrastructure.Socket;
 using Koba.Infrastructure.Socket.Events;
 using Koba.Infrastructure.Socket.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace Koba.Infrastructure;
+namespace Koba.Infrastructure.Gateway;
 
 internal class GatewayManager
 {
@@ -27,10 +26,10 @@ internal class GatewayManager
         this.receiveMessageChannel = receiveMessageChannel;
     }
 
-    private async Task MessageTriggered(OnMessageReceivedData eventData)
+    private async Task MessageTriggered(OnMessageReceivedData messageData)
     {
-        string rawData = eventData.Data;
-        CancellationToken cancellationToken = eventData.CancellationToken;
+        string rawData = messageData.Data;
+        CancellationToken cancellationToken = messageData.CancellationToken;
         var parsedEvent = JsonSerializer.Deserialize<EventBase>(rawData);
         int? sequencialNumber = parsedEvent.s;
         
