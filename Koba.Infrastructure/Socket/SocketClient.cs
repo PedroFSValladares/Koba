@@ -6,8 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Koba.Infrastructure.Socket
 {
-
-    internal class SocketClient : IGatewayClient, IRawSocket
+    internal class SocketClient : IRawSocket
     {
         public event Func<OnEventReceivedData, Task> OnMessageReceived;
         
