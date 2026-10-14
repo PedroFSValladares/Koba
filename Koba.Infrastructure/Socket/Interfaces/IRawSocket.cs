@@ -5,6 +5,6 @@ namespace Koba.Infrastructure.Socket.Interfaces;
 internal interface IRawSocket
 {
     Task SendAsync(string message, CancellationToken cancellationToken);
-    ChannelWriter<string> GetOutputChannel();
-    event Func<OnEventReceivedData, Task> OnEventReceived;
+    Task ConnectAsync(string url, CancellationToken cancellationToken);
+    event Func<OnMessageReceivedData, Task> OnMessageReceived;
 }

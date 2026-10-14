@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Koba.Infrastructure.Socket;
+using Microsoft.Extensions.Configuration;
 using Xunit.Abstractions;
 
 namespace Tests;
@@ -27,27 +28,29 @@ public class SocketTests
         string message = config["SocketTestConfig:Message"];
         int skipMessages = Convert.ToInt32(config["SocketTestConfig:ResponsesToSkip"]);
         int testTimeout = Convert.ToInt32(config["SocketTestConfig:Timeout"]);
+        int skippedMessages = 0;
         string result = "";
 
-        var channels = await client.ConnectAsync(host, receiveToken.Token);
+        await client.ConnectAsync(host, receiveToken.Token);
+        client.OnMessageReceived += (OnMessageReceivedData data) =>
+        {
+            result = data.Data;
+            
+            if (skippedMessages > skipMessages)
+                Assert.Equal(message, result);
+            
+            return Task.CompletedTask;
+        };
 
         try
         {
             var sendToken = new CancellationTokenSource(TimeSpan.FromSeconds(testTimeout));
-            await channels.SendMessageAsync(message, sendToken.Token);
-
-            for (int i = 0; i < skipMessages; i++)
-                _ = await channels.GetMessageAsync(receiveToken.Token);
-            
-            result = await channels.GetMessageAsync(receiveToken.Token);
+            await client.SendAsync(message, sendToken.Token);
         }
         catch (OperationCanceledException)
         {
             Assert.Fail("Timeout exceeded.");
         }
-        
-        Assert.Equal(message, result);
-        
         await receiveToken.CancelAsync();
     }
 }

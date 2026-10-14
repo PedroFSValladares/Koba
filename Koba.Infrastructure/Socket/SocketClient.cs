@@ -6,31 +6,26 @@ using Microsoft.Extensions.Logging;
 
 namespace Koba.Infrastructure.Socket
 {
-    public class SocketClient : IGatewayClient, IRawSocket
+    internal class SocketClient : IRawSocket
     {
-        public ChannelWriter<string> GetOutputChannel() =>  sendMessageChannel.Writer;
-
-        public event Func<OnEventReceivedData, Task> OnEventReceived;
+        public event Func<OnMessageReceivedData, Task> OnMessageReceived;
         
         private readonly ClientWebSocket client; 
         private int bufferSize = 2048;
-        private readonly Channel<string> sendMessageChannel, receiveMessageChannel;
+        
         private readonly ILogger<SocketClient> logger;
 
-        public SocketClient(ClientWebSocket client, Channel<string> sendMessageChannel, Channel<string> receiveMessageChannel, ILogger<SocketClient> logger)
+        internal SocketClient(ClientWebSocket client, ILogger<SocketClient> logger)
         {
             this.client = client;
-            this.sendMessageChannel = sendMessageChannel;
-            this.receiveMessageChannel = receiveMessageChannel;
             this.logger = logger;
         }
         
-        public void Close() {
+        internal void Close() {
             client.Abort();
-            receiveMessageChannel.Writer.TryComplete();
         }
 
-        public async Task<GatewayChannel> ConnectAsync(string url, CancellationToken cancellationToken)
+        public async Task ConnectAsync(string url, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(url))
                 throw new ArgumentNullException(nameof(url), "A URL fornecida não deve ser nula.");
@@ -48,29 +43,8 @@ namespace Koba.Infrastructure.Socket
             logger.LogInformation($"Iniciando filas de envio e recebimento....");
             
             _ = Task.Run(() => BeginListenAsync(cancellationToken), cancellationToken);
-            _ = Task.Run(() => SendAsync(cancellationToken), cancellationToken);
             
             logger.LogInformation($"Socket conectado com sucesso e pronto para envio de mensagens.");
-            
-            return GatewayChannel.Create(sendMessageChannel.Writer, receiveMessageChannel.Reader);
-        }
-
-        private async Task SendAsync(CancellationToken cancellationToken)
-        {
-            logger.LogInformation($"Task de envio iniciada");
-            await foreach (string message in sendMessageChannel.Reader.ReadAllAsync(cancellationToken))
-            {
-                var buffer = Encoding.UTF8.GetBytes(message);
-                
-                logger.LogDebug($"Mensagem recebida para envio {message}.");
-                
-                if(client.State != WebSocketState.Open && !cancellationToken.IsCancellationRequested)
-                    throw new InvalidOperationException(
-                        "Conexão do socket foi encerrada, não é possível enviar a mensagem");
-                
-                await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, cancellationToken);
-            }
-            logger.LogInformation($"Task de envio encerrada");
         }
 
         private async Task BeginListenAsync(CancellationToken cancellationToken)
@@ -81,7 +55,6 @@ namespace Koba.Infrastructure.Socket
             Memory<byte> receiveBuffer = new Memory<byte>(buffer);
             List<byte> received = new List<byte>();
             ValueWebSocketReceiveResult result;
-            ChannelWriter<string> channelWriter = receiveMessageChannel.Writer;
 
             try
             {
@@ -104,8 +77,8 @@ namespace Koba.Infrastructure.Socket
                     
                     logger.LogDebug($"Payload recebido: {jsonPaylod}.");
                     
-                    OnEventReceivedData eventData = new OnEventReceivedData(jsonPaylod, cancellationToken);
-                    _ = Task.Run(() => OnEventReceived.Invoke(eventData), cancellationToken);
+                    OnMessageReceivedData eventData = new OnMessageReceivedData(jsonPaylod, cancellationToken);
+                    _ = Task.Run(() => OnMessageReceived.Invoke(eventData), cancellationToken);
 
                     received.Clear();
                 }
@@ -117,12 +90,6 @@ namespace Koba.Infrastructure.Socket
             catch (Exception ex)
             {
                 logger.LogError(ex.Message, ex);
-            }
-            finally
-            {
-                logger.LogInformation("Finalizando canal de envio....");
-                bool closeResult = channelWriter.TryComplete();
-                logger.LogInformation($"Canal finalizado com sucesso: {closeResult}.");
             }
         }
 
