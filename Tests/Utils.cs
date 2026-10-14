@@ -6,9 +6,9 @@ using Moq;
 
 namespace Tests;
 
-public static class Utils
+internal static class Utils
 {
-    public static IRawSocket GetGatewayClient()
+    internal static IRawSocket GetGatewayClient()
     {
         var webSocket = new System.Net.WebSockets.ClientWebSocket();
         var logger = new Mock<ILogger<SocketClient>>();
