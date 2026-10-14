@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Threading.Channels;
+using Koba.Infrastructure.Gateway.Interfaces;
 using Koba.Infrastructure.Socket;
 using Koba.Infrastructure.Socket.Events;
 using Koba.Infrastructure.Socket.Interfaces;
@@ -7,16 +8,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Koba.Infrastructure.Gateway;
 
-internal class GatewayManager
+public class DiscordGateway : IDiscordGateway
 {
     private readonly IRawSocket socket;
-    private readonly ILogger<GatewayManager> logger;
+    private readonly ILogger<DiscordGateway> logger;
     private readonly SessionState cache;
     private readonly Channel<string> sendMessageChannel, receiveMessageChannel;
     
     private Timer heartbeatTimer;
 
-    private GatewayManager(IRawSocket socket, ILogger<GatewayManager> logger, SessionState cache, Channel<string> sendMessageChannel, Channel<string> receiveMessageChannel)
+    private DiscordGateway(IRawSocket socket, ILogger<DiscordGateway> logger, SessionState cache, Channel<string> sendMessageChannel, Channel<string> receiveMessageChannel)
     {
         this.socket = socket;
         this.logger = logger;
@@ -95,5 +96,10 @@ internal class GatewayManager
     private void Disconnect()
     {
         
+    }
+    
+    public Task SendEvent<TEventType>(TEventType evt, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
     }
 }
