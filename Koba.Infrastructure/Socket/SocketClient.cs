@@ -77,8 +77,8 @@ namespace Koba.Infrastructure.Socket
                     
                     logger.LogDebug($"Payload recebido: {jsonPaylod}.");
                     
-                    OnMessageReceivedData eventData = new OnMessageReceivedData(jsonPaylod, cancellationToken);
-                    _ = Task.Run(() => OnMessageReceived.Invoke(eventData), cancellationToken);
+                    OnMessageReceivedData messageData = new OnMessageReceivedData(jsonPaylod, cancellationToken);
+                    _ = Task.Run(() => OnMessageReceived.Invoke(messageData), cancellationToken);
 
                     received.Clear();
                 }
