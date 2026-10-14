@@ -13,23 +13,25 @@ internal class GatewayManager
     private readonly IRawSocket socket;
     private readonly ILogger<GatewayManager> logger;
     private readonly SessionState cache;
+    private readonly Channel<string> sendMessageChannel, receiveMessageChannel;
     
     private Timer heartbeatTimer;
 
-    private GatewayManager(IRawSocket socket, ILogger<GatewayManager> logger, SessionState cache)
+    private GatewayManager(IRawSocket socket, ILogger<GatewayManager> logger, SessionState cache, Channel<string> sendMessageChannel, Channel<string> receiveMessageChannel)
     {
         this.socket = socket;
         this.logger = logger;
         this.cache = cache;
-        this.socket.OnEventReceived += EventTriggered;
+        this.socket.OnMessageReceived += MessageTriggered;
+        this.sendMessageChannel = sendMessageChannel;
+        this.receiveMessageChannel = receiveMessageChannel;
     }
 
-    private async Task EventTriggered(OnEventReceivedData eventData)
+    private async Task MessageTriggered(OnMessageReceivedData eventData)
     {
         string rawData = eventData.Data;
         CancellationToken cancellationToken = eventData.CancellationToken;
         var parsedEvent = JsonSerializer.Deserialize<EventBase>(rawData);
-        ChannelWriter<string> channel = socket.GetOutputChannel();
         int? sequencialNumber = parsedEvent.s;
         
         if (sequencialNumber != null)
@@ -56,7 +58,7 @@ internal class GatewayManager
                     Disconnect();
                 break;
             default:
-                await channel.WriteAsync(rawData, cancellationToken);
+                await receiveMessageChannel.Writer.WriteAsync(rawData, cancellationToken);
                 break;
         }
     }
