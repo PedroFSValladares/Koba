@@ -32,7 +32,7 @@ public class SocketTests
         string result = "";
 
         await client.ConnectAsync(host, receiveToken.Token);
-        client.OnMessageReceived += (OnEventReceivedData data) =>
+        client.OnMessageReceived += (OnMessageReceivedData data) =>
         {
             result = data.Data;
             

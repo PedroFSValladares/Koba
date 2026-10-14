@@ -8,7 +8,7 @@ namespace Koba.Infrastructure.Socket
 {
     internal class SocketClient : IRawSocket
     {
-        public event Func<OnEventReceivedData, Task> OnMessageReceived;
+        public event Func<OnMessageReceivedData, Task> OnMessageReceived;
         
         private readonly ClientWebSocket client; 
         private int bufferSize = 2048;
@@ -77,7 +77,7 @@ namespace Koba.Infrastructure.Socket
                     
                     logger.LogDebug($"Payload recebido: {jsonPaylod}.");
                     
-                    OnEventReceivedData eventData = new OnEventReceivedData(jsonPaylod, cancellationToken);
+                    OnMessageReceivedData eventData = new OnMessageReceivedData(jsonPaylod, cancellationToken);
                     _ = Task.Run(() => OnMessageReceived.Invoke(eventData), cancellationToken);
 
                     received.Clear();

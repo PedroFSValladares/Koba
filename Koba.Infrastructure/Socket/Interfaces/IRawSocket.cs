@@ -6,5 +6,5 @@ internal interface IRawSocket
 {
     Task SendAsync(string message, CancellationToken cancellationToken);
     Task ConnectAsync(string url, CancellationToken cancellationToken);
-    event Func<OnEventReceivedData, Task> OnMessageReceived;
+    event Func<OnMessageReceivedData, Task> OnMessageReceived;
 }

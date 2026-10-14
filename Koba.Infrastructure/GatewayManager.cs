@@ -27,7 +27,7 @@ internal class GatewayManager
         this.receiveMessageChannel = receiveMessageChannel;
     }
 
-    private async Task MessageTriggered(OnEventReceivedData eventData)
+    private async Task MessageTriggered(OnMessageReceivedData eventData)
     {
         string rawData = eventData.Data;
         CancellationToken cancellationToken = eventData.CancellationToken;
