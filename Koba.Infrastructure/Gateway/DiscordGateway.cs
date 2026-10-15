@@ -27,6 +27,25 @@ public class DiscordGateway : IDiscordGateway
         this.sendMessageChannel = sendMessageChannel;
         this.receiveMessageChannel = receiveMessageChannel;
     }
+    
+    public async Task Init(CancellationToken cancellationToken)
+    {
+        using var scope = logger.BeginScope("[GATEWAY_INIT]");
+        string gatewayUrl = "wss://discord.gg/";
+        try
+        {
+            logger.LogInformation("Iniciando tentativa de conexão com o Gateway");
+            await socket.ConnectAsync(gatewayUrl, cancellationToken);
+
+            logger.LogInformation("Iniando EventDispatching.");
+            _ = Task.Run(() => ProccessReceivedMessages(cancellationToken), cancellationToken);
+        }
+        catch (Exception e)
+        {
+            logger.LogError("Erro ao inicializar o Gateway: {errorMessage}\n{exceptions}", e.Message, e);
+            throw;
+        }
+    }
 
     private async Task DispatchEvent(string message, CancellationToken cancellationToken)
     {
