@@ -107,6 +107,26 @@ public class DiscordGateway : IDiscordGateway
         throw new NotImplementedException();
     }
 
+    public void Subscribe<TEventType>(Func<TEventType, Task> callback, CancellationToken cancellationToken) where TEventType : EventBase
+    {
+        using var scope = logger.BeginScope("[SUBSCRIPTION]");
+        var type = typeof(TEventType);
+        
+        logger.LogInformation("Nova inscrição recebido para o evento {type}.", type);
+        
+        if (!handlers.ContainsKey(typeof(TEventType)))
+            handlers[type] = [];
+        
+        handlers[type].Add(obj => callback((TEventType)obj));
+        
+        logger.LogInformation("Inscrição  recebido para o evento {type} com sucesso.", type);
+    }
+
+    public void Close()
+    {
+        throw new NotImplementedException();
+    }
+    
     private async Task EnqueueReceivedMessage(OnMessageReceivedData messageData)
     {
         using var scope = logger.BeginScope("[ENQUEUE TASK]");
