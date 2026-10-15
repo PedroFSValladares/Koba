@@ -18,14 +18,14 @@ public class DiscordGateway : IDiscordGateway
     
     private Timer heartbeatTimer;
 
-    private DiscordGateway(IRawSocket socket, ILogger<DiscordGateway> logger, SessionState cache, Channel<string> sendMessageChannel, Channel<string> receiveMessageChannel)
+    private DiscordGateway(IRawSocket socket, ILogger<DiscordGateway> logger, SessionState cache)
     {
         this.socket = socket;
         this.logger = logger;
         this.cache = cache;
         this.socket.OnMessageReceived += EnqueueReceivedMessage;
-        this.sendMessageChannel = sendMessageChannel;
-        this.receiveMessageChannel = receiveMessageChannel;
+        this.sendMessageChannel = Channel.CreateUnbounded<string>();
+        this.receiveMessageChannel = Channel.CreateUnbounded<string>();
     }
     
     public async Task Init(CancellationToken cancellationToken)
