@@ -126,7 +126,28 @@ public class DiscordGateway : IDiscordGateway
     
     public Task SendEvent<TEventType>(TEventType evt, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        using var scope = logger.BeginScope("[SEND EVENT]");
+        string json = JsonSerializer.Serialize(evt);
+        ChannelWriter<string> channelWriter = sendMessageChannel.Writer;
+        
+        logger.LogInformation("Iniciando enfileiramento de evento a ser enviado.");
+        logger.LogInformation("Evento a ser enfileirado: {json}.", json);
+
+        try
+        {
+            channelWriter.WriteAsync(json, cancellationToken);
+        }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogWarning("Enfileiramento do evento cancelado.\n{ex}", ex);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Erro ao enfileirar o evento: {message}.\n{exception}", ex.Message, ex);
+        }
+        
+        logger.LogInformation("Fim do enfileiramento da mensagem.");
+        return Task.CompletedTask;
     }
 
     public void Subscribe<TEventType>(Func<TEventType, Task> callback, CancellationToken cancellationToken) where TEventType : EventBase
