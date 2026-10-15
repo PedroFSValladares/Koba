@@ -14,6 +14,7 @@ public class DiscordGateway : IDiscordGateway
     private readonly ILogger<DiscordGateway> logger;
     private readonly SessionState cache;
     private readonly Channel<string> sendMessageChannel, receiveMessageChannel;
+    private readonly Dictionary<Type, List<Func<object, Task>>> handlers = [];
     
     private Timer heartbeatTimer;
 
@@ -27,11 +28,9 @@ public class DiscordGateway : IDiscordGateway
         this.receiveMessageChannel = receiveMessageChannel;
     }
 
-    private async Task MessageTriggered(OnMessageReceivedData messageData)
+    private async Task DispatchEvent(string message, CancellationToken cancellationToken)
     {
-        string rawData = messageData.Data;
-        CancellationToken cancellationToken = messageData.CancellationToken;
-        var parsedEvent = JsonSerializer.Deserialize<EventBase>(rawData);
+        var parsedEvent = JsonSerializer.Deserialize<EventBase>(message);
         int? sequencialNumber = parsedEvent.s;
         
         if (sequencialNumber != null)
@@ -58,7 +57,12 @@ public class DiscordGateway : IDiscordGateway
                     Disconnect();
                 break;
             default:
-                await receiveMessageChannel.Writer.WriteAsync(rawData, cancellationToken);
+                Type eventType = parsedEvent.GetType();
+                if (handlers.TryGetValue(eventType, out var callbacks))
+                {
+                    if(callbacks.Count > 0)
+                        callbacks.ForEach(handler => handler(parsedEvent));
+                }
                 break;
         }
     }
