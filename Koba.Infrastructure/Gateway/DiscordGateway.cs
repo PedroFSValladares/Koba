@@ -114,4 +114,19 @@ public class DiscordGateway : IDiscordGateway
         await receiveMessageChannel.Writer.WriteAsync(messageData.Data);
         logger.LogInformation("Mensagem {messageData} enfileirada para processamento.", messageData.Data);
     }
+
+    private async Task ProccessReceivedMessages(CancellationToken cancellationToken)
+    {
+        using var scope = logger.BeginScope("[PROCESS MESSAGE TASK]");
+        
+        logger.LogInformation("Task de processamento iniciada.");
+        while (!cancellationToken.IsCancellationRequested)
+            await foreach (var receivedMessage in receiveMessageChannel.Reader.ReadAllAsync(CancellationToken.None))
+            {
+                logger.LogInformation("Evento enviado para despacho.");
+                await DispatchEvent(receivedMessage, cancellationToken);
+            }
+        logger.LogInformation("Task de processamento finalizada.");
+    }
+    
 }
