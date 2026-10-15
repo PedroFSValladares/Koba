@@ -22,7 +22,7 @@ public class DiscordGateway : IDiscordGateway
         this.socket = socket;
         this.logger = logger;
         this.cache = cache;
-        this.socket.OnMessageReceived += MessageTriggered;
+        this.socket.OnMessageReceived += EnqueueReceivedMessage;
         this.sendMessageChannel = sendMessageChannel;
         this.receiveMessageChannel = receiveMessageChannel;
     }
@@ -101,5 +101,13 @@ public class DiscordGateway : IDiscordGateway
     public Task SendEvent<TEventType>(TEventType evt, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
+    }
+
+    private async Task EnqueueReceivedMessage(OnMessageReceivedData messageData)
+    {
+        using var scope = logger.BeginScope("[ENQUEUE TASK]");
+        
+        await receiveMessageChannel.Writer.WriteAsync(messageData.Data);
+        logger.LogInformation("Mensagem {messageData} enfileirada para processamento.", messageData.Data);
     }
 }
