@@ -42,6 +42,8 @@ public class DiscordGateway : IDiscordGateway
 
             logger.LogInformation("Iniando EventDispatching.");
             _ = Task.Run(() => ProccessReceivedMessages(cancellationToken), cancellationToken);
+            logger.LogInformation("Iniciando Task de envio de mensagens.");
+            _ = Task.Run(() => SendEqueuedMessages(cancellationToken), cancellationToken);
         }
         catch (Exception e)
         {
@@ -191,5 +193,26 @@ public class DiscordGateway : IDiscordGateway
             }
         logger.LogInformation("Task de processamento finalizada.");
     }
-    
+
+    private async Task SendEqueuedMessages(CancellationToken cancellationToken)
+    {
+        using var scope = logger.BeginScope("[SEND MESSAGE TASK]");
+        ChannelReader<string> channelReader = sendMessageChannel.Reader;
+        
+        logger.LogInformation("Task de envio iniciada.");
+        while (!cancellationToken.IsCancellationRequested)
+            await foreach (var receivedMessage in channelReader.ReadAllAsync(cancellationToken))
+            {
+                try
+                {
+                    await socket.SendAsync(receivedMessage, cancellationToken);
+                    logger.LogInformation("Evento enviado com sucesso: {receivedMessage}", receivedMessage);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Erro ao enviar mensagem.");
+                }
+            }
+        logger.LogInformation("Task de envio finalizada.");
+    }
 }
