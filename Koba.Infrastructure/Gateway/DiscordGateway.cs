@@ -5,6 +5,7 @@ using Koba.Infrastructure.Socket;
 using Koba.Infrastructure.Socket.Events;
 using Koba.Infrastructure.Socket.Interfaces;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Koba.Infrastructure.Gateway;
 
@@ -15,10 +16,11 @@ public class DiscordGateway : IDiscordGateway
     private readonly SessionState cache;
     private readonly Channel<string> sendMessageChannel, receiveMessageChannel;
     private readonly Dictionary<Type, List<Func<object, Task>>> handlers = [];
+    private readonly GatewayConfiguration config;
     
     private Timer heartbeatTimer;
 
-    private DiscordGateway(IRawSocket socket, ILogger<DiscordGateway> logger, SessionState cache)
+    private DiscordGateway(IRawSocket socket, ILogger<DiscordGateway> logger, SessionState cache, IOptions<GatewayConfiguration> gatewayConfiguration)
     {
         this.socket = socket;
         this.logger = logger;
@@ -26,12 +28,13 @@ public class DiscordGateway : IDiscordGateway
         this.socket.OnMessageReceived += EnqueueReceivedMessage;
         this.sendMessageChannel = Channel.CreateUnbounded<string>();
         this.receiveMessageChannel = Channel.CreateUnbounded<string>();
+        config = gatewayConfiguration.Value;
     }
     
     public async Task Init(CancellationToken cancellationToken)
     {
         using var scope = logger.BeginScope("[GATEWAY_INIT]");
-        string gatewayUrl = "wss://discord.gg/";
+        string gatewayUrl = config.GatewayUrl;
         try
         {
             logger.LogInformation("Iniciando tentativa de conexão com o Gateway");
