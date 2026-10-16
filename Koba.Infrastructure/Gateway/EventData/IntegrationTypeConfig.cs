@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Koba.Infrastructure.Socket.EventData;
+namespace Koba.Infrastructure.Gateway.EventData;
 
 public class IntegrationTypeConfig
 {

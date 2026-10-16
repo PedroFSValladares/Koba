@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Serialization;
-using Koba.Infrastructure.Socket.EventData;
+using Koba.Infrastructure.Gateway.EventData;
 
 namespace Koba.Infrastructure.Gateway.Events;
 
