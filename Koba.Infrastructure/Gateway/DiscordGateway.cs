@@ -130,7 +130,8 @@ public class DiscordGateway : IDiscordGateway
 
     private void ResumeConnection()
     {
-        
+        ResumeData data = new ResumeData(config.GatewayToken, cache.sessionId, (int)cache.sequencialNumber);
+        ResumeEvent resumeEvent = new ResumeEvent(6, null, null, data);
     }
 
     private void Disconnect()
