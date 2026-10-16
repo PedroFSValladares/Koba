@@ -1,4 +1,4 @@
-﻿namespace Koba.Infrastructure;
+﻿namespace Koba.Infrastructure.Gateway;
 
 public class SessionState
 {
