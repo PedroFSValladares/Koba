@@ -98,8 +98,13 @@ public class DiscordGateway : IDiscordGateway
         }
     }
 
-    private void StartHeartBeatTimer(int interval, CancellationToken cancellationToken) => 
-        heartbeatTimer = new Timer(SendHeartBeat, cancellationToken, 0, interval);
+    private void StartHeartBeatTimer(int interval, CancellationToken cancellationToken, bool first = true)
+    {
+        heartbeatTimer?.Dispose();
+        int dueTime = first ? interval : 0;
+        
+        heartbeatTimer = new Timer(SendHeartBeat, cancellationToken, interval, interval);
+    }
     
     
     private void SendHeartBeat(object? state)
