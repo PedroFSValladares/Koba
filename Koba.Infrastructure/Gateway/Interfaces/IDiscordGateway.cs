@@ -1,4 +1,4 @@
-﻿using Koba.Infrastructure.Socket.Events;
+﻿using Koba.Infrastructure.Gateway.Events;
 
 namespace Koba.Infrastructure.Gateway.Interfaces;
 
