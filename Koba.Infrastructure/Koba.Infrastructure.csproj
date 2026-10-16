@@ -18,5 +18,8 @@
         <InternalsVisibleTo Include="Tests" />
         <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Socket\EventData\" />
+    </ItemGroup>
 
 </Project>
