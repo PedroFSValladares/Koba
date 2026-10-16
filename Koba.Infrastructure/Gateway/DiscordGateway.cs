@@ -82,11 +82,18 @@ public class DiscordGateway : IDiscordGateway
                 break;
             default:
                 Type eventType = parsedEvent.GetType();
+                
                 if (handlers.TryGetValue(eventType, out var callbacks))
-                {
                     if(callbacks.Count > 0)
-                        callbacks.ForEach(handler => handler(parsedEvent));
-                }
+                        try
+                        {
+                            callbacks.ForEach(handler => handler(parsedEvent));
+                        }
+                        catch (Exception e)
+                        {
+                            logger.LogError(e, "Erro ao processar chamada de handler.");
+                        }
+                
                 break;
         }
     }
