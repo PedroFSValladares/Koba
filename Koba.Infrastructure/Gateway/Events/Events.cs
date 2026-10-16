@@ -17,6 +17,7 @@ internal abstract record HeartBeatAckEvent(int op, int? s, string? t) : EventBas
 internal abstract record ReconnectEvent(int op, int? s, string? t) : EventBase(op, s, t);
 internal abstract record InvalidSessionEvent(int op, bool d, int? s, string? t) : EventBase(op, s, t);
 public abstract record ReadyEvent(int v, User user, UnavailableGuild guild, string session_id, string resume_gateway_url, int[]? shard, DiscordApplication application);
+internal record ResumeEvent(int op, int? s, string? t, ResumeData d) : EventBase(op, s, t);
 
 public abstract record HelloData(int heartbeat_interval); 
 internal record ResumeData(string token, string session_id, int seq);
