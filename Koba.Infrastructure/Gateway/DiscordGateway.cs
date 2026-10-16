@@ -78,7 +78,7 @@ public class DiscordGateway : IDiscordGateway
             case InvalidSessionEvent invalidSessionEvent:
                 logger.LogInformation("Sessão inválida.");
                 if(invalidSessionEvent.d)
-                    ResumeConnection();
+                    await Task.Run(ResumeConnection, cancellationToken);
                 else
                     Disconnect();
                 break;
@@ -130,9 +130,26 @@ public class DiscordGateway : IDiscordGateway
         logger.LogInformation("HeartBeat enviado.");
     }
 
-    private void ResumeConnection()
+    private async Task ResumeConnection()
     {
+        ResumeData data = new ResumeData(config.GatewayToken, cache.sessionId, (int)cache.sequencialNumber);
+        ResumeEvent resumeEvent = new ResumeEvent(6, null, null, data);
+        string json = JsonSerializer.Serialize(resumeEvent);
+        string newUrl = cache.resumeGatewayUrl;
         
+        await socketCancellationTokenSource.CancelAsync();
+        socketCancellationTokenSource.Dispose();
+        socketCancellationTokenSource = new CancellationTokenSource();
+
+        try
+        {
+            await socket.ConnectAsync(newUrl, socketCancellationTokenSource.Token);
+            await socket.SendAsync(json, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,"Erro ao tentar reconexão rápida: {message}", ex.Message);
+        }
     }
 
     private void Disconnect()

@@ -3,4 +3,5 @@
 internal class GatewayConfiguration
 {
     internal string GatewayUrl { get; }
+    internal string GatewayToken { get; }
 }
