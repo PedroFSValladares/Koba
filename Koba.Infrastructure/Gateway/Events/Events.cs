@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Koba.Infrastructure.Socket.EventData;
 
-namespace Koba.Infrastructure.Socket.Events;
+namespace Koba.Infrastructure.Gateway.Events;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "op")]
 [JsonDerivedType(typeof(HelloEvent), typeDiscriminator: 10)]

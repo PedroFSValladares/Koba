@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using System.Threading.Channels;
+using Koba.Infrastructure.Gateway.Events;
 using Koba.Infrastructure.Gateway.Interfaces;
 using Koba.Infrastructure.Socket;
-using Koba.Infrastructure.Socket.Events;
 using Koba.Infrastructure.Socket.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
