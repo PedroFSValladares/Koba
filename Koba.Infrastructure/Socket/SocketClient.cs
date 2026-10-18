@@ -9,6 +9,7 @@ namespace Koba.Infrastructure.Socket
     internal class SocketClient : IRawSocket
     {
         public event Func<OnMessageReceivedData, Task> OnMessageReceived;
+        public event Func<IRawSocket, Task> OnConnectionClosed;
         
         private ClientWebSocket? client; 
         private int bufferSize = 2048;
@@ -76,10 +77,11 @@ namespace Koba.Infrastructure.Socket
                     {
                         result = await client.ReceiveAsync(receiveBuffer, cancellationToken);
 
-                        if (result.MessageType == WebSocketMessageType.Close)
+                        if (result.MessageType is WebSocketMessageType.Close)
                         {
-                            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken);
-                            return;
+                            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty,
+                                cancellationToken);
+                            throw new OperationCanceledException("Conexão encerrada pelo host remoto.");
                         }
 
                         received.AddRange(new ArraySegment<byte>(buffer, 0, result.Count));
@@ -102,6 +104,10 @@ namespace Koba.Infrastructure.Socket
             catch (Exception ex)
             {
                 logger.LogError(ex.Message, ex);
+            }
+            finally
+            {
+                _ = Task.Run(() => OnConnectionClosed?.Invoke(this), CancellationToken.None);
             }
         }
 
