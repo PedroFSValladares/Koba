@@ -10,14 +10,13 @@ namespace Koba.Infrastructure.Socket
     {
         public event Func<OnMessageReceivedData, Task> OnMessageReceived;
         
-        private readonly ClientWebSocket client; 
+        private ClientWebSocket? client; 
         private int bufferSize = 2048;
         
         private readonly ILogger<SocketClient> logger;
 
-        internal SocketClient(ClientWebSocket client, ILogger<SocketClient> logger)
+        internal SocketClient(ILogger<SocketClient> logger)
         {
-            this.client = client;
             this.logger = logger;
         }
         
@@ -33,18 +32,31 @@ namespace Koba.Infrastructure.Socket
             logger.LogInformation($"Preparando para se conectar a url {url}.");
             
             Uri uri = new(url);
-            await client.ConnectAsync(uri, cancellationToken);
             
             logger.LogInformation($"Conectado ao host com sucesso.");
 
             if (client.State != WebSocketState.Open)
                 throw new InvalidOperationException("Estado do Socket não permite inicialização do listener.");
+            client?.Dispose();
+            try
+            {
+                client = new ClientWebSocket();
+                logger.LogInformation("Preparando para se conectar ao host {url}.", url);
+                await client.ConnectAsync(uri, cancellationToken);
+                logger.LogInformation("Conectado ao host com sucesso.");
+                
+                _ = Task.Run(() => BeginListenAsync(cancellationToken), cancellationToken);
+            }
+            catch (OperationCanceledException ex)
+            {
+                logger.LogInformation("Operação de conecção interrompida. Não foi possível conectar ao host.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Erro desconhecido ao tentar conectar ao host: {mesage}",ex.Message);
+                throw;
+            }
                     
-            logger.LogInformation($"Iniciando filas de envio e recebimento....");
-            
-            _ = Task.Run(() => BeginListenAsync(cancellationToken), cancellationToken);
-            
-            logger.LogInformation($"Socket conectado com sucesso e pronto para envio de mensagens.");
         }
 
         private async Task BeginListenAsync(CancellationToken cancellationToken)
