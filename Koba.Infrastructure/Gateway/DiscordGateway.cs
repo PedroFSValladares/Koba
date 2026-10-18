@@ -137,9 +137,7 @@ public class DiscordGateway : IDiscordGateway
         string json = JsonSerializer.Serialize(resumeEvent);
         string newUrl = cache.resumeGatewayUrl;
         
-        await socketCancellationTokenSource.CancelAsync();
-        socketCancellationTokenSource.Dispose();
-        socketCancellationTokenSource = new CancellationTokenSource();
+        Disconnect();
 
         try
         {
@@ -154,7 +152,13 @@ public class DiscordGateway : IDiscordGateway
 
     private void Disconnect()
     {
+        using var scope = logger.BeginScope("[DISCONNECT HANDLING]");
         
+        logger.LogInformation("Desconectando do host remoto.");
+        
+        socketCancellationTokenSource.Cancel();
+        socketCancellationTokenSource.Dispose();
+        socketCancellationTokenSource = new CancellationTokenSource();
     }
     
     public Task SendEvent<TEventType>(TEventType evt, CancellationToken cancellationToken)
