@@ -30,12 +30,9 @@ namespace Koba.Infrastructure.Socket
             if (string.IsNullOrEmpty(url))
                 throw new ArgumentNullException(nameof(url), "A URL fornecida não deve ser nula.");
             
-            logger.LogInformation($"Preparando para se conectar a url {url}.");
+            using var scope = logger.BeginScope("[SOCKET CONNECTION]");
+            Uri uri = new Uri(url);
             
-            Uri uri = new(url);
-            
-            logger.LogInformation($"Conectado ao host com sucesso.");
-
             if (client.State != WebSocketState.Open)
                 throw new InvalidOperationException("Estado do Socket não permite inicialização do listener.");
             client?.Dispose();
@@ -62,12 +59,13 @@ namespace Koba.Infrastructure.Socket
 
         private async Task BeginListenAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation($"Listener iniciado.");
-            
+            using var scope = logger.BeginScope("[SOCKET LISTENNER]");
             byte[] buffer = new byte[bufferSize];
             Memory<byte> receiveBuffer = new Memory<byte>(buffer);
             List<byte> received = new List<byte>();
             ValueWebSocketReceiveResult result;
+            
+            logger.LogInformation("Iniciando linstenner.");
 
             try
             {
@@ -108,6 +106,7 @@ namespace Koba.Infrastructure.Socket
             finally
             {
                 _ = Task.Run(() => OnConnectionClosed?.Invoke(this), CancellationToken.None);
+                logger.LogInformation("Listener finalizado.");
             }
         }
 
