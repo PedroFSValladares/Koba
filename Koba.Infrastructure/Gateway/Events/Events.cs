@@ -11,13 +11,13 @@ namespace Koba.Infrastructure.Gateway.Events;
 [JsonDerivedType(typeof(InvalidSessionEvent), typeDiscriminator: 9)]
 public abstract record EventBase(int op, int? s, string? t);
 
-public abstract record HelloEvent(int op, HelloData d, int? s, string? t) : EventBase(op, s, t);
-internal record HeartBeatEvent(int op, int d, int? s, string? t)  : EventBase(op, s , t);
-internal abstract record HeartBeatAckEvent(int op, int? s, string? t) : EventBase(op, s, t);
-internal abstract record ReconnectEvent(int op, int? s, string? t) : EventBase(op, s, t);
-internal abstract record InvalidSessionEvent(int op, bool d, int? s, string? t) : EventBase(op, s, t);
-public abstract record ReadyEvent(int v, User user, UnavailableGuild guild, string session_id, string resume_gateway_url, int[]? shard, DiscordApplication application);
-internal record ResumeEvent(int op, int? s, string? t, ResumeData d) : EventBase(op, s, t);
+public record HelloEvent(HelloData d, int? s, string? t) : EventBase(10, s, t);
+internal record HeartBeatEvent(int d, int? s, string? t)  : EventBase(1, s , t);
+internal record HeartBeatAckEvent(int? s, string? t) : EventBase(11, s, t);
+internal record ReconnectEvent(int? s, string? t) : EventBase(7, s, t);
+internal record InvalidSessionEvent(bool d, int? s, string? t) : EventBase(9, s, t);
+public record ReadyEvent(int v, User user, UnavailableGuild guild, string session_id, string resume_gateway_url, int[]? shard, DiscordApplication application);
+internal record ResumeEvent(int? s, string? t, ResumeData d) : EventBase(6, s, t);
 
-public abstract record HelloData(int heartbeat_interval); 
+public record HelloData(int heartbeat_interval); 
 internal record ResumeData(string token, string session_id, int seq);

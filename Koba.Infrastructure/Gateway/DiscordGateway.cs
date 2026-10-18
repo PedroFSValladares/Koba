@@ -128,7 +128,7 @@ public class DiscordGateway : IDiscordGateway
         if (state is not CancellationToken)
             logger.LogWarning("Token de cancelamento não recebido no envio do HeartBeat. Comportamentos inesperados ao desconectar podem ocorrer.");
         
-        HeartBeatEvent heartBeat = new HeartBeatEvent(10, 0, sequencialNumber, null);
+        HeartBeatEvent heartBeat = new HeartBeatEvent(0, sequencialNumber, null);
         string json = JsonSerializer.Serialize(heartBeat);
         _ = Task.Run(() => socket.SendAsync(json, cancellationToken), cancellationToken);
         
@@ -138,7 +138,7 @@ public class DiscordGateway : IDiscordGateway
     private async Task ResumeConnection()
     {
         ResumeData data = new ResumeData(config.GatewayToken, cache.sessionId, (int)cache.sequencialNumber);
-        ResumeEvent resumeEvent = new ResumeEvent(6, null, null, data);
+        ResumeEvent resumeEvent = new ResumeEvent(null, null, data);
         string json = JsonSerializer.Serialize(resumeEvent);
         string newUrl = cache.resumeGatewayUrl;
         
