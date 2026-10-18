@@ -17,6 +17,7 @@ public class DiscordGateway : IDiscordGateway
     private readonly Channel<string> sendMessageChannel, receiveMessageChannel;
     private readonly Dictionary<Type, List<Func<object, Task>>> handlers = [];
     private readonly GatewayConfiguration config;
+    private CancellationTokenSource socketCancellationTokenSource = new CancellationTokenSource();
     
     private Timer heartbeatTimer;
 
@@ -35,10 +36,11 @@ public class DiscordGateway : IDiscordGateway
     {
         using var scope = logger.BeginScope("[GATEWAY_INIT]");
         string gatewayUrl = config.GatewayUrl;
+        CancellationToken token = socketCancellationTokenSource.Token;
         try
         {
             logger.LogInformation("Iniciando tentativa de conexão com o Gateway");
-            await socket.ConnectAsync(gatewayUrl, cancellationToken);
+            await socket.ConnectAsync(gatewayUrl, token);
 
             logger.LogInformation("Iniando EventDispatching.");
             _ = Task.Run(() => ProccessReceivedMessages(cancellationToken), cancellationToken);
