@@ -72,7 +72,10 @@ public class DiscordGateway : IDiscordGateway
         if (parsedEvent is null) return;
         int? sequencialNumber = parsedEvent.s;
         
-        if (sequencialNumber != null)
+        logger.LogInformation("Digíto sequencial: {sequencialNumber}", sequencialNumber);
+        logger.LogInformation("Evento a ser tratado: {eventType}", parsedEvent.GetType());
+        
+        if (sequencialNumber is not null)
             cache.sequencialNumber = sequencialNumber;
 
         switch (parsedEvent)
@@ -89,10 +92,11 @@ public class DiscordGateway : IDiscordGateway
                 logger.LogInformation("HeatBeat respondido.");
                 break;
             case InvalidSessionEvent invalidSessionEvent:
-                logger.LogInformation("Sessão inválida.");
+                logger.LogInformation("Sessão atual inválida. Sessão resumivel? {isResumable}", invalidSessionEvent.d);
                 await Reconnect(invalidSessionEvent.d);
                 break;
             default:
+                logger.LogInformation("Evento não é de conexão. Despachando para aplicação.");
                 CallHandlers(parsedEvent);
                 break;
         }
