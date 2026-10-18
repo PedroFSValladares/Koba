@@ -83,20 +83,25 @@ public class DiscordGateway : IDiscordGateway
                     await Reconnect();
                 break;
             default:
-                Type eventType = parsedEvent.GetType();
-                
-                if (handlers.TryGetValue(eventType, out var callbacks))
-                    if(callbacks.Count > 0)
-                        try
-                        {
-                            callbacks.ForEach(handler => handler(parsedEvent));
-                        }
-                        catch (Exception e)
-                        {
-                            logger.LogError(e, "Erro ao processar chamada de handler.");
-                        }
-                
+                CallHandlers(parsedEvent);
                 break;
+        }
+    }
+
+    private void CallHandlers(EventBase eventToSend)
+    {
+        Type eventType = eventToSend.GetType();
+
+        if (!handlers.TryGetValue(eventType, out var callbacks)) return;
+        if (callbacks.Count <= 0) return;
+        
+        try
+        {
+            callbacks.ForEach(handler => handler(eventToSend));
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Erro ao processar chamada de handler.");
         }
     }
 
