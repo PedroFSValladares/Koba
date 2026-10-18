@@ -8,7 +8,7 @@ namespace Tests;
 
 internal static class Utils
 {
-    internal static IRawSocket GetGatewayClient()
+    internal static IRawSocket GetSocketClient()
     {
         var webSocket = new System.Net.WebSockets.ClientWebSocket();
         var logger = new Mock<ILogger<SocketClient>>();
