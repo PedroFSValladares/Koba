@@ -21,7 +21,7 @@ public class SocketTests
     [Fact]
     public async Task SocketClient_Deve_Receber_e_Enviar_Mensagem_Sucesso()
     {
-        var client = Utils.GetSocketClient();
+        var client = Utils.GetSocketClient(testOutputHelper);
         var receiveToken = new CancellationTokenSource();
 
         string host = config["SocketTestConfig:EchoServerHost"];
