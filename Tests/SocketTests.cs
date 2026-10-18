@@ -18,8 +18,8 @@ public class SocketTests
             .Build();
     }
 
-    [Fact]
-    public async Task SocketClient_Deve_Receber_e_Enviar_Mensagem_Sucesso()
+    [Fact(DisplayName = "Testa envio e recebimento de mensagens, se recebido resposta então obtem sucesso")]
+    public async Task EnviaMensagem_SeRecebidaResposta_ObtemSucesso()
     {
         var client = Utils.GetSocketClient(testOutputHelper);
         var receiveToken = new CancellationTokenSource();
