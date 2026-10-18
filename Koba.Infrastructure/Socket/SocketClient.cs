@@ -33,8 +33,6 @@ namespace Koba.Infrastructure.Socket
             using var scope = logger.BeginScope("[SOCKET CONNECTION]");
             Uri uri = new Uri(url);
             
-            if (client.State != WebSocketState.Open)
-                throw new InvalidOperationException("Estado do Socket não permite inicialização do listener.");
             client?.Dispose();
             try
             {
@@ -86,9 +84,8 @@ namespace Koba.Infrastructure.Socket
                     } while (!result.EndOfMessage);
 
                     string jsonPaylod = Encoding.UTF8.GetString(received.ToArray());
-                    
                     logger.LogDebug($"Payload recebido: {jsonPaylod}.");
-                    
+
                     OnMessageReceivedData messageData = new OnMessageReceivedData(jsonPaylod, cancellationToken);
                     _ = Task.Run(() => OnMessageReceived?.Invoke(messageData), cancellationToken);
 
