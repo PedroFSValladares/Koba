@@ -15,7 +15,14 @@ public class TestLogger<T> : ILogger<T>
     
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        _output.WriteLine($"[{logLevel}]: {formatter(state, exception)}");
+        try
+        {
+            _output.WriteLine($"[{logLevel}]: {formatter(state, exception)}");
+        }
+        catch (InvalidOperationException)
+        {
+            
+        }
     }
 
     public bool IsEnabled(LogLevel logLevel) => true;
