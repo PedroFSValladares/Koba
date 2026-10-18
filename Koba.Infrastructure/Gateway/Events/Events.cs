@@ -4,11 +4,12 @@ using Koba.Infrastructure.Gateway.EventData;
 namespace Koba.Infrastructure.Gateway.Events;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "op")]
-[JsonDerivedType(typeof(HelloEvent), typeDiscriminator: 10)]
 [JsonDerivedType(typeof(HeartBeatEvent), typeDiscriminator: 1)]
+[JsonDerivedType(typeof(ResumeEvent), typeDiscriminator: 6)]
 [JsonDerivedType(typeof(ReconnectEvent), typeDiscriminator: 7)]
-[JsonDerivedType(typeof(HeartBeatAckEvent), typeDiscriminator: 11)]
 [JsonDerivedType(typeof(InvalidSessionEvent), typeDiscriminator: 9)]
+[JsonDerivedType(typeof(HelloEvent), typeDiscriminator: 10)]
+[JsonDerivedType(typeof(HeartBeatAckEvent), typeDiscriminator: 11)]
 public abstract record EventBase(int op, int? s, string? t);
 
 public record HelloEvent(HelloData d, int? s, string? t) : EventBase(10, s, t);
