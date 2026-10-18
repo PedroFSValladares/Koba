@@ -13,6 +13,6 @@ internal static class Utils
         var webSocket = new System.Net.WebSockets.ClientWebSocket();
         var logger = new Mock<ILogger<SocketClient>>();
         
-        return new SocketClient(webSocket, logger.Object);
+        return new SocketClient(logger.Object);
     }
 }
