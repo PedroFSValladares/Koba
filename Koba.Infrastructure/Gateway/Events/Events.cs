@@ -10,7 +10,7 @@ namespace Koba.Infrastructure.Gateway.Events;
 [JsonDerivedType(typeof(InvalidSessionEvent), typeDiscriminator: 9)]
 [JsonDerivedType(typeof(HelloEvent), typeDiscriminator: 10)]
 [JsonDerivedType(typeof(HeartBeatAckEvent), typeDiscriminator: 11)]
-public abstract record EventBase(int op, int? s, string? t);
+public abstract record EventBase([property: JsonIgnore] int op, int? s, string? t);
 
 public record HelloEvent(HelloData d, int? s, string? t) : EventBase(10, s, t);
 internal record HeartBeatEvent(int d, int? s, string? t)  : EventBase(1, s , t);

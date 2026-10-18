@@ -56,7 +56,20 @@ public class DiscordGateway : IDiscordGateway
 
     private async Task DispatchEvent(string message, CancellationToken cancellationToken)
     {
-        var parsedEvent = JsonSerializer.Deserialize<EventBase>(message);
+        using var scope = logger.BeginScope("[EVENT HANDLING]");
+        
+        logger.LogInformation("Evento recebido para processasmento.");
+        EventBase? parsedEvent = null;
+        try
+        {
+            parsedEvent = JsonSerializer.Deserialize<EventBase>(message);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro na deserialização do evento: {message}", ex.Message);
+            return;
+        }
+        if (parsedEvent is null) return;
         int? sequencialNumber = parsedEvent.s;
         
         if (sequencialNumber != null)
