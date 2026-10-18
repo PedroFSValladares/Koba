@@ -80,7 +80,7 @@ public class DiscordGateway : IDiscordGateway
                 if(invalidSessionEvent.d)
                     await Task.Run(ResumeConnection, cancellationToken);
                 else
-                    Disconnect();
+                    await Reconnect();
                 break;
             default:
                 Type eventType = parsedEvent.GetType();
@@ -147,6 +147,25 @@ public class DiscordGateway : IDiscordGateway
         catch (Exception ex)
         {
             logger.LogError(ex,"Erro ao tentar reconexão rápida: {message}", ex.Message);
+        }
+    }
+
+    private async Task Reconnect()
+    {
+        using var scope = logger.BeginScope("[RECONNECTION HANDLER]");
+        string url = config.GatewayUrl;
+        
+        Disconnect();
+        
+        try
+        {
+            logger.LogInformation("Reconectando ao host {url}", url);
+            await socket.ConnectAsync(url, socketCancellationTokenSource.Token);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Erro ao tentar reconectar: {message}", e.Message);
+            throw;
         }
     }
 
