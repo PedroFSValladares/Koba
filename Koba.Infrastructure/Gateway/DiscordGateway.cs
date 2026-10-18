@@ -21,7 +21,7 @@ public class DiscordGateway : IDiscordGateway
     
     private Timer heartbeatTimer;
 
-    private DiscordGateway(IRawSocket socket, ILogger<DiscordGateway> logger, SessionState cache, IOptions<GatewayConfiguration> gatewayConfiguration)
+    internal DiscordGateway(IRawSocket socket, ILogger<DiscordGateway> logger, SessionState cache, IOptions<GatewayConfiguration> gatewayConfiguration)
     {
         this.socket = socket;
         this.logger = logger;
