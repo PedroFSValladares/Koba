@@ -8,11 +8,10 @@ namespace Tests;
 
 internal static class Utils
 {
-    internal static IRawSocket GetSocketClient()
+    internal static IRawSocket GetSocketClient(ITestOutputHelper outputHelper)
     {
-        var webSocket = new System.Net.WebSockets.ClientWebSocket();
-        var logger = new Mock<ILogger<SocketClient>>();
+        var logger = new TestLogger<SocketClient>(outputHelper);
         
-        return new SocketClient(logger.Object);
+        return new SocketClient(logger);
     }
 }
