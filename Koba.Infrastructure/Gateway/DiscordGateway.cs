@@ -90,10 +90,7 @@ public class DiscordGateway : IDiscordGateway
                 break;
             case InvalidSessionEvent invalidSessionEvent:
                 logger.LogInformation("Sessão inválida.");
-                if(invalidSessionEvent.d)
-                    await Task.Run(ResumeConnection, cancellationToken);
-                else
-                    await Reconnect();
+                await Reconnect(invalidSessionEvent.d);
                 break;
             default:
                 CallHandlers(parsedEvent);
@@ -148,30 +145,10 @@ public class DiscordGateway : IDiscordGateway
         logger.LogInformation("HeartBeat enviado.");
     }
 
-    private async Task ResumeConnection()
-    {
-        ResumeData data = new ResumeData(config.GatewayToken, cache.sessionId, (int)cache.sequencialNumber);
-        ResumeEvent resumeEvent = new ResumeEvent(null, null, data);
-        string json = JsonSerializer.Serialize(resumeEvent);
-        string newUrl = cache.resumeGatewayUrl;
-        
-        Disconnect();
-
-        try
-        {
-            await socket.ConnectAsync(newUrl, socketCancellationTokenSource.Token);
-            await socket.SendAsync(json, CancellationToken.None);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex,"Erro ao tentar reconexão rápida: {message}", ex.Message);
-        }
-    }
-
-    private async Task Reconnect()
+    private async Task Reconnect(bool isResumable = false)
     {
         using var scope = logger.BeginScope("[RECONNECTION HANDLER]");
-        string url = config.GatewayUrl;
+        string url = isResumable && cache.resumeGatewayUrl is not null ? cache.resumeGatewayUrl : config.GatewayUrl;
         
         Disconnect();
         
@@ -179,12 +156,23 @@ public class DiscordGateway : IDiscordGateway
         {
             logger.LogInformation("Reconectando ao host {url}", url);
             await socket.ConnectAsync(url, socketCancellationTokenSource.Token);
+            if (isResumable)
+            {
+                logger.LogInformation("Enviando info para reconexão resumida.");
+                
+                ResumeData data = new ResumeData(config.GatewayToken, cache.sessionId, (int)cache.sequencialNumber);
+                ResumeEvent resumeEvent = new ResumeEvent(null, null, data);
+                string json = JsonSerializer.Serialize(resumeEvent);
+                
+                await socket.SendAsync(json, CancellationToken.None);
+            }
         }
         catch (Exception e)
         {
             logger.LogError(e, "Erro ao tentar reconectar: {message}", e.Message);
             throw;
         }
+        logger.LogInformation("Reconexão finalizada.");
     }
 
     private void Disconnect()
