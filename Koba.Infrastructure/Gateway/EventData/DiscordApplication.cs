@@ -1,6 +1,6 @@
-﻿namespace Koba.Infrastructure.Socket.EventData;
+﻿using System.Text.Json.Serialization;
 
-using System.Text.Json.Serialization;
+namespace Koba.Infrastructure.Gateway.EventData;
 
 public class DiscordApplication
 {

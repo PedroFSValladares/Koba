@@ -9,15 +9,15 @@ namespace Koba.Infrastructure.Socket
     internal class SocketClient : IRawSocket
     {
         public event Func<OnMessageReceivedData, Task> OnMessageReceived;
+        public event Func<IRawSocket, Task> OnConnectionClosed;
         
-        private readonly ClientWebSocket client; 
+        private ClientWebSocket? client; 
         private int bufferSize = 2048;
         
         private readonly ILogger<SocketClient> logger;
 
-        internal SocketClient(ClientWebSocket client, ILogger<SocketClient> logger)
+        internal SocketClient(ILogger<SocketClient> logger)
         {
-            this.client = client;
             this.logger = logger;
         }
         
@@ -30,31 +30,40 @@ namespace Koba.Infrastructure.Socket
             if (string.IsNullOrEmpty(url))
                 throw new ArgumentNullException(nameof(url), "A URL fornecida não deve ser nula.");
             
-            logger.LogInformation($"Preparando para se conectar a url {url}.");
+            using var scope = logger.BeginScope("[SOCKET CONNECTION]");
+            Uri uri = new Uri(url);
             
-            Uri uri = new(url);
-            await client.ConnectAsync(uri, cancellationToken);
-            
-            logger.LogInformation($"Conectado ao host com sucesso.");
-
-            if (client.State != WebSocketState.Open)
-                throw new InvalidOperationException("Estado do Socket não permite inicialização do listener.");
+            client?.Dispose();
+            try
+            {
+                client = new ClientWebSocket();
+                logger.LogInformation("Preparando para se conectar ao host {url}.", url);
+                await client.ConnectAsync(uri, cancellationToken);
+                logger.LogInformation("Conectado ao host com sucesso.");
+                
+                _ = Task.Run(() => BeginListenAsync(cancellationToken), cancellationToken);
+            }
+            catch (OperationCanceledException ex)
+            {
+                logger.LogInformation("Operação de conecção interrompida. Não foi possível conectar ao host.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Erro desconhecido ao tentar conectar ao host: {mesage}",ex.Message);
+                throw;
+            }
                     
-            logger.LogInformation($"Iniciando filas de envio e recebimento....");
-            
-            _ = Task.Run(() => BeginListenAsync(cancellationToken), cancellationToken);
-            
-            logger.LogInformation($"Socket conectado com sucesso e pronto para envio de mensagens.");
         }
 
         private async Task BeginListenAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation($"Listener iniciado.");
-            
+            using var scope = logger.BeginScope("[SOCKET LISTENNER]");
             byte[] buffer = new byte[bufferSize];
             Memory<byte> receiveBuffer = new Memory<byte>(buffer);
             List<byte> received = new List<byte>();
             ValueWebSocketReceiveResult result;
+            
+            logger.LogInformation("Iniciando linstenner.");
 
             try
             {
@@ -64,21 +73,21 @@ namespace Koba.Infrastructure.Socket
                     {
                         result = await client.ReceiveAsync(receiveBuffer, cancellationToken);
 
-                        if (result.MessageType == WebSocketMessageType.Close)
+                        if (result.MessageType is WebSocketMessageType.Close)
                         {
-                            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken);
-                            return;
+                            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty,
+                                cancellationToken);
+                            throw new OperationCanceledException("Conexão encerrada pelo host remoto.");
                         }
 
                         received.AddRange(new ArraySegment<byte>(buffer, 0, result.Count));
                     } while (!result.EndOfMessage);
 
                     string jsonPaylod = Encoding.UTF8.GetString(received.ToArray());
-                    
                     logger.LogDebug($"Payload recebido: {jsonPaylod}.");
-                    
-                    OnMessageReceivedData eventData = new OnMessageReceivedData(jsonPaylod, cancellationToken);
-                    _ = Task.Run(() => OnMessageReceived.Invoke(eventData), cancellationToken);
+
+                    OnMessageReceivedData messageData = new OnMessageReceivedData(jsonPaylod, cancellationToken);
+                    _ = Task.Run(() => OnMessageReceived?.Invoke(messageData), cancellationToken);
 
                     received.Clear();
                 }
@@ -90,6 +99,11 @@ namespace Koba.Infrastructure.Socket
             catch (Exception ex)
             {
                 logger.LogError(ex.Message, ex);
+            }
+            finally
+            {
+                _ = Task.Run(() => OnConnectionClosed?.Invoke(this), CancellationToken.None);
+                logger.LogInformation("Listener finalizado.");
             }
         }
 
