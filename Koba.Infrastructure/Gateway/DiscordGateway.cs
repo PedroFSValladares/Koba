@@ -83,6 +83,8 @@ public class DiscordGateway : IDiscordGateway
             case HelloEvent helloEvent:
                 StartHeartBeatTimer(helloEvent.d.heartbeat_interval, cancellationToken);
                 logger.LogInformation("HeartBeating inciado.");
+                CallHandlers(parsedEvent);
+                logger.LogInformation("Hello Event despachado.");
                 break;
             case HeartBeatEvent heartBeatEvent:
                 logger.LogInformation("HeartBeat solicitado pelo gateway.");
