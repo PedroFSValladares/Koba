@@ -2,6 +2,6 @@
 
 internal class GatewayConfiguration
 {
-    internal string GatewayUrl { get; }
-    internal string GatewayToken { get; }
+    internal string GatewayUrl { get; set; }
+    internal string GatewayToken { get; set; }
 }
