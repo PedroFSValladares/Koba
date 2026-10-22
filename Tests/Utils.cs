@@ -29,11 +29,12 @@ internal static class Utils
         return socket;
     }
 
-    internal static IDiscordGateway GetDiscordGateway(IRawSocket socket, ITestOutputHelper outputHelper, string gatewayUrl = "Ok", string token = "")
+    internal static IDiscordGateway GetDiscordGateway(IRawSocket socket, ITestOutputHelper outputHelper, string gatewayUrl = "Ok", string token = "", int? sequencialNumber = null)
     {
         var logger = new TestLogger<DiscordGateway>(outputHelper);
         Mock<IOptions<GatewayConfiguration>> options = new Mock<IOptions<GatewayConfiguration>>();
         SessionState sessionState = new SessionState();
+        sessionState.sequencialNumber = sequencialNumber;
         
         GatewayConfiguration gatewayConfig = new GatewayConfiguration();
         gatewayConfig.GatewayUrl = gatewayUrl;

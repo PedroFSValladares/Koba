@@ -63,6 +63,24 @@ public class GatewayTests
         Assert.True(callbackExecuted);
     }
     
+    [Fact(DisplayName = "Testa envio de HeartBeat com número sequencial, se fizer dois envios com número sequencial, obtem sucesso.")]
+    public async Task TestaHeartBeatComNumeroSequencial_SeFizerDoisEnviosComNumeroSequencial_ObtemSucesso()
+    {
+        CancellationTokenSource tokenSource = new CancellationTokenSource();
+        Mock<IRawSocket> socket = Utils.GetMockedSocketClient(_output);
+        IDiscordGateway gateway = Utils.GetDiscordGateway(socket.Object, _output, sequencialNumber: 10);
+        HelloEvent helloEvent = new HelloEvent(100);
+        string falseEvent = JsonSerializer.Serialize<EventBase>(helloEvent);
+
+        string rawPayload = """{"d":10,"s":null,"t":null}""";
+
+        await gateway.Init(tokenSource.Token);
+        
+        socket.Raise(e => e.OnMessageReceived += null, new OnMessageReceivedData(falseEvent,tokenSource.Token));
+        Thread.Sleep(210);
+        socket.Verify(s => s.SendAsync(It.Is<string>(x => x.Equals(rawPayload)), It.IsAny<CancellationToken>()), Times.AtLeast(2));
+    }
+    
     [Fact(DisplayName = "Testa envio de HeartBeat sem número sequencial, se fizer dois envios com número sequencial nullo, obtem sucesso.")]
     public async Task TestaHeartBeatSemNumeroSequencial_SeFizerDoisEnviosComNumeroNulo_ObtemSucesso()
     {
