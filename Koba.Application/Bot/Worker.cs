@@ -1,5 +1,5 @@
-﻿using Koba.Infrastructure.Gateway.Events;
-using Koba.Infrastructure.Gateway.Interfaces;
+﻿using Koba.Contracts;
+using Koba.Contracts.Events;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

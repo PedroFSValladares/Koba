@@ -1,9 +1,7 @@
-﻿using System.Threading.Channels;
+﻿using Koba.Contracts.Interfaces;
 using Koba.Infrastructure.Gateway;
-using Koba.Infrastructure.Gateway.Interfaces;
 using Koba.Infrastructure.Socket;
 using Koba.Infrastructure.Socket.Interfaces;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using Xunit.Abstractions;

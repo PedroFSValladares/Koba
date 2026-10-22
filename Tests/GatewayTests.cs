@@ -1,7 +1,8 @@
 using System.Text.Json;
+using Koba.Contracts;
+using Koba.Contracts.Events;
+using Koba.Contracts.Interfaces;
 using Koba.Infrastructure.Gateway;
-using Koba.Infrastructure.Gateway.Events;
-using Koba.Infrastructure.Gateway.Interfaces;
 using Koba.Infrastructure.Socket;
 using Koba.Infrastructure.Socket.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -39,7 +40,7 @@ public class GatewayTests
         Mock<IRawSocket> socket = Utils.GetMockedSocketClient(_output);
         IDiscordGateway gateway = Utils.GetDiscordGateway(socket.Object, _output);
         
-        HelloEvent helloEvent = new HelloEvent(new HelloData(2000), null, null);
+        HelloEvent helloEvent = new HelloEvent(2000);
         string falseEvent = JsonSerializer.Serialize<EventBase>(helloEvent);
         bool callbackExecuted = false, eventNotNull = false, opCodeOk = false, heartbeatOk = false;
 
@@ -49,10 +50,10 @@ public class GatewayTests
         {
             callbackExecuted = e is
             {
-                d.heartbeat_interval: 2000,
-                op: 10,
-                s: null,
-                t: null
+                Data.HeartBeatInterval: 2000,
+                OpCode: 10,
+                SequencialNumber: null,
+                GatewayEventIdentifier: null
             };
             return Task.CompletedTask;
         }, tokenSource.Token);
@@ -68,7 +69,7 @@ public class GatewayTests
         CancellationTokenSource tokenSource = new CancellationTokenSource();
         Mock<IRawSocket> socket = Utils.GetMockedSocketClient(_output);
         IDiscordGateway gateway = Utils.GetDiscordGateway(socket.Object, _output);
-        HelloEvent helloEvent = new HelloEvent(new HelloData(100), null, null);
+        HelloEvent helloEvent = new HelloEvent(100);
         string falseEvent = JsonSerializer.Serialize<EventBase>(helloEvent);
         bool callbackExecuted = false;
         string rawPayload = """{"d":0,"s":null,"t":null}""";
@@ -87,7 +88,7 @@ public class GatewayTests
         Mock<IRawSocket> socket = Utils.GetMockedSocketClient(_output);
         IDiscordGateway gateway = Utils.GetDiscordGateway(socket.Object, _output);
         
-        InvalidSessionEvent resumeEvent = new InvalidSessionEvent(true, 0, "null");
+        InvalidSessionEvent resumeEvent = new InvalidSessionEvent(true);
         string falseEvent = JsonSerializer.Serialize<EventBase>(resumeEvent);
 
         await gateway.Init(tokenSource.Token);

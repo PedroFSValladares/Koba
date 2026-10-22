@@ -1,0 +1,2 @@
+﻿namespace Koba.Contracts.Events;
+

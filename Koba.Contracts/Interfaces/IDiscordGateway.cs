@@ -1,6 +1,6 @@
-﻿using Koba.Infrastructure.Gateway.Events;
+﻿using Koba.Contracts.Events;
 
-namespace Koba.Infrastructure.Gateway.Interfaces;
+namespace Koba.Contracts.Interfaces;
 
 public interface IDiscordGateway
 {

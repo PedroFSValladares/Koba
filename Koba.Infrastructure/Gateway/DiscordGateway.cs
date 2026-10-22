@@ -1,7 +1,8 @@
 ﻿using System.Text.Json;
 using System.Threading.Channels;
-using Koba.Infrastructure.Gateway.Events;
-using Koba.Infrastructure.Gateway.Interfaces;
+using Koba.Contracts;
+using Koba.Contracts.Events;
+using Koba.Contracts.Interfaces;
 using Koba.Infrastructure.Socket;
 using Koba.Infrastructure.Socket.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -70,7 +71,7 @@ public class DiscordGateway : IDiscordGateway
             return;
         }
         if (parsedEvent is null) return;
-        int? sequencialNumber = parsedEvent.s;
+        int? sequencialNumber = parsedEvent.SequencialNumber;
         
         logger.LogInformation("Digíto sequencial: {sequencialNumber}", sequencialNumber);
         logger.LogInformation("Evento a ser tratado: {eventType}", parsedEvent.GetType());
@@ -81,7 +82,7 @@ public class DiscordGateway : IDiscordGateway
         switch (parsedEvent)
         {
             case HelloEvent helloEvent:
-                StartHeartBeatTimer(helloEvent.d.heartbeat_interval, cancellationToken);
+                StartHeartBeatTimer(helloEvent.Data.HeartBeatInterval, cancellationToken);
                 logger.LogInformation("HeartBeating inciado.");
                 CallHandlers(parsedEvent);
                 logger.LogInformation("Hello Event despachado.");
@@ -94,8 +95,8 @@ public class DiscordGateway : IDiscordGateway
                 logger.LogInformation("HeatBeat respondido.");
                 break;
             case InvalidSessionEvent invalidSessionEvent:
-                logger.LogInformation("Sessão atual inválida. Sessão resumivel? {isResumable}", invalidSessionEvent.d);
-                await Reconnect(invalidSessionEvent.d);
+                logger.LogInformation("Sessão atual inválida. Sessão resumivel? {isResumable}", invalidSessionEvent.CanResume);
+                await Reconnect(invalidSessionEvent.CanResume);
                 break;
             default:
                 logger.LogInformation("Evento não é de conexão. Despachando para aplicação.");
@@ -144,7 +145,7 @@ public class DiscordGateway : IDiscordGateway
         if (state is not CancellationToken)
             logger.LogWarning("Token de cancelamento não recebido no envio do HeartBeat. Comportamentos inesperados ao desconectar podem ocorrer.");
         
-        HeartBeatEvent heartBeat = new HeartBeatEvent(0, sequencialNumber, null);
+        HeartBeatEvent heartBeat = new HeartBeatEvent(sequencialNumber);
         string json = JsonSerializer.Serialize(heartBeat);
         _ = Task.Run(() => socket.SendAsync(json, cancellationToken), cancellationToken);
         
@@ -166,8 +167,7 @@ public class DiscordGateway : IDiscordGateway
             {
                 logger.LogInformation("Enviando info para reconexão resumida.");
                 
-                ResumeData data = new ResumeData(config.GatewayToken, cache.sessionId, (int)cache.sequencialNumber);
-                ResumeEvent resumeEvent = new ResumeEvent(null, null, data);
+                ResumeEvent resumeEvent = new ResumeEvent(config.GatewayToken, cache.sessionId, (int)cache.sequencialNumber);
                 string json = JsonSerializer.Serialize(resumeEvent);
                 
                 await socket.SendAsync(json, CancellationToken.None);

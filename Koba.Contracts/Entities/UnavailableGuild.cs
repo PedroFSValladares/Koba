@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Koba.Infrastructure.Gateway.EventData;
+namespace Koba.Contracts.Entities;
 
 public class UnavailableGuild
 {

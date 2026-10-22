@@ -21,5 +21,8 @@
     <ItemGroup>
       <Folder Include="Socket\EventData\" />
     </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Koba.Contracts\Koba.Contracts.csproj" />
+    </ItemGroup>
 
 </Project>
