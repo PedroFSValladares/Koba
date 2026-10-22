@@ -5,12 +5,14 @@ namespace Koba.Contracts.Events;
 public record HelloEvent : EventBase
 {
     [JsonPropertyName("d")]
-    public HelloData Data { get; }
+    public HelloData Data { get; init; }
 
     public HelloEvent(int heartBeatInterval) : base(10, null, null)
     {
         Data = new HelloData(heartBeatInterval);
     }
+    
+    public HelloEvent() : base(10, null, null){}
 }
 
 public record HelloData
