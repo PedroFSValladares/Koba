@@ -63,16 +63,16 @@ public class GatewayTests
         Assert.True(callbackExecuted);
     }
     
-    [Fact(DisplayName = "Testa envio de HeartBeat, se fizer dois envios, obtem sucesso.")]
-    public async Task TestaHeartBeat_SeFizerDoisEnvios_ObtemSucesso()
+    [Fact(DisplayName = "Testa envio de HeartBeat sem número sequencial, se fizer dois envios com número sequencial nullo, obtem sucesso.")]
+    public async Task TestaHeartBeatSemNumeroSequencial_SeFizerDoisEnviosComNumeroNulo_ObtemSucesso()
     {
         CancellationTokenSource tokenSource = new CancellationTokenSource();
         Mock<IRawSocket> socket = Utils.GetMockedSocketClient(_output);
         IDiscordGateway gateway = Utils.GetDiscordGateway(socket.Object, _output);
         HelloEvent helloEvent = new HelloEvent(100);
         string falseEvent = JsonSerializer.Serialize<EventBase>(helloEvent);
-        bool callbackExecuted = false;
-        string rawPayload = """{"d":0,"s":null,"t":null}""";
+
+        string rawPayload = """{"d":null,"s":null,"t":null}""";
 
         await gateway.Init(tokenSource.Token);
         
