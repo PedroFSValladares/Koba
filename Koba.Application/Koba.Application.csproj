@@ -7,4 +7,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Koba.Infrastructure\Koba.Infrastructure.csproj" />
+    </ItemGroup>
+
 </Project>
