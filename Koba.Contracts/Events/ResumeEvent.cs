@@ -6,12 +6,12 @@ public record ResumeEvent : EventBase
 {
     [JsonPropertyName("d")]
     public ResumeData Data { get; set; }
-    public ResumeEvent(string botToken, string session_id, int sequencialNumber) : base(6, null, null)
+    public ResumeEvent(string botToken, string sessionId, int? sequencialNumber) : base(6, null, null)
     {
         Data = new ResumeData
         {
             BotToken = botToken,
-            SessionId = session_id,
+            SessionId = sessionId,
             SequencialNumber = sequencialNumber
         };
     }
@@ -24,5 +24,5 @@ public record ResumeData
     [JsonPropertyName("session_id")]
     public string SessionId {get; init; }
     [JsonPropertyName("seq")]
-    public int SequencialNumber { get; init; }
+    public int? SequencialNumber { get; init; }
 };

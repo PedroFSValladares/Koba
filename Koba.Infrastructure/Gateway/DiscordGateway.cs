@@ -167,7 +167,7 @@ public class DiscordGateway : IDiscordGateway
             {
                 logger.LogInformation("Enviando info para reconexão resumida.");
                 
-                ResumeEvent resumeEvent = new ResumeEvent(config.GatewayToken, cache.sessionId, (int)cache.sequencialNumber);
+                ResumeEvent resumeEvent = new ResumeEvent(config.GatewayToken, cache.sessionId, cache.sequencialNumber);
                 string json = JsonSerializer.Serialize(resumeEvent);
                 
                 await socket.SendAsync(json, CancellationToken.None);

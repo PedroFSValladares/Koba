@@ -35,6 +35,7 @@ internal static class Utils
         Mock<IOptions<GatewayConfiguration>> options = new Mock<IOptions<GatewayConfiguration>>();
         SessionState sessionState = new SessionState();
         sessionState.sequencialNumber = sequencialNumber;
+        sessionState.sessionId = "teste";
         
         GatewayConfiguration gatewayConfig = new GatewayConfiguration();
         gatewayConfig.GatewayUrl = gatewayUrl;
