@@ -3,6 +3,7 @@ using System.Threading.Channels;
 using Koba.Contracts;
 using Koba.Contracts.Events;
 using Koba.Contracts.Interfaces;
+using Koba.Contracts.Payloads;
 using Koba.Infrastructure.Socket;
 using Koba.Infrastructure.Socket.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -33,7 +34,7 @@ public class DiscordGateway : IDiscordGateway
         config = gatewayConfiguration.Value;
     }
     
-    public async Task Init(CancellationToken cancellationToken)
+    public async Task Init(SessionStartLimit sessionStartInfo, CancellationToken cancellationToken)
     {
         using var scope = logger.BeginScope("[GATEWAY_INIT]");
         string gatewayUrl = config.GatewayUrl;
