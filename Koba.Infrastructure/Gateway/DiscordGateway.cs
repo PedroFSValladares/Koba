@@ -93,8 +93,8 @@ public class DiscordGateway : IDiscordGateway
             case HelloEvent helloEvent:
                 StartHeartBeatTimer(helloEvent.Data.HeartBeatInterval, cancellationToken);
                 logger.LogInformation("HeartBeating inciado.");
-                CallHandlers(parsedEvent);
-                logger.LogInformation("Hello Event despachado.");
+                await IdentifyAsync(cancellationToken);
+                logger.LogInformation("Identificação com o Gateway finalizada.");
                 break;
             case HeartBeatEvent heartBeatEvent:
                 logger.LogInformation("HeartBeat solicitado pelo gateway.");
@@ -111,6 +111,35 @@ public class DiscordGateway : IDiscordGateway
                 logger.LogInformation("Evento não é de conexão. Despachando para aplicação.");
                 CallHandlers(parsedEvent);
                 break;
+        }
+    }
+
+    private async Task IdentifyAsync(CancellationToken cancellationToken)
+    {
+        using var scope = logger.BeginScope("[IDENTIFY HANDLER]");
+        logger.LogInformation("Carregando informações para identificação no Gateway.");
+        IdentifyEvent identifyEvent = new IdentifyEvent
+        {
+            Data = new IdentifyData
+            {
+                AppProperties = config.AppProperties,
+                InitialPresence =  config.InitialPresence,
+                Intents = config.Intent,
+                LargeThreshold = config.LargeThreshold,
+                Token = config.GatewayToken,
+                UseCompression = config.UseCompression,
+            }
+        };
+        string payload = JsonSerializer.Serialize(identifyEvent);
+
+        try
+        {
+            logger.LogInformation("Enviando identificação.");
+            await socket.SendAsync(payload, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Erro ao prosseguir na etapa de identifcação: {message}", e.Message);
         }
     }
 

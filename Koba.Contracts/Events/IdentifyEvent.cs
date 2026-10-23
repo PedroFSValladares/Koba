@@ -25,7 +25,7 @@ public record IdentifyData
     [JsonPropertyName("shard")]
     public int[]? Shard { get; init; }
     [JsonPropertyName("presence")]
-    public Presence? Presence { get; init; }
+    public Presence? InitialPresence { get; init; }
     [JsonPropertyName("intents")]
     public DiscordIntents Intents { get; init; }
     [JsonPropertyName("capabilities")]
