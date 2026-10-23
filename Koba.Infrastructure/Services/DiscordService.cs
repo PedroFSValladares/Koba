@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
-using Koba.Infrastructure.Services.Dtos;
-using Koba.Infrastructure.Services.Interfaces;
+using Koba.Contracts.Interfaces;
+using Koba.Contracts.Payloads;
 using Microsoft.Extensions.Logging;
 
 namespace Koba.Infrastructure.Services;

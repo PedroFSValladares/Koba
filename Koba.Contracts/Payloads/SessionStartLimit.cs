@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Koba.Infrastructure.Services.Dtos;
+namespace Koba.Contracts.Payloads;
 
 public record SessionStartLimit
 {

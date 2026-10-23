@@ -1,6 +1,6 @@
-﻿using Koba.Infrastructure.Services.Dtos;
+﻿using Koba.Contracts.Payloads;
 
-namespace Koba.Infrastructure.Services.Interfaces;
+namespace Koba.Contracts.Interfaces;
 
 public interface IDiscordService
 {
