@@ -3,7 +3,6 @@ using System.Threading.Channels;
 using Koba.Contracts;
 using Koba.Contracts.Events;
 using Koba.Contracts.Interfaces;
-using Koba.Contracts.Payloads;
 using Koba.Infrastructure.Socket;
 using Koba.Infrastructure.Socket.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -39,16 +38,10 @@ public class DiscordGateway : IDiscordGateway
     public async Task Init(CancellationToken cancellationToken)
     {
         using var scope = logger.BeginScope("[GATEWAY_INIT]");
+        string gatewayUrl = config.GatewayUrl;
         CancellationToken token = socketCancellationTokenSource.Token;
-        string gatewayUrl;
-        
         try
         {
-            logger.LogInformation("Buscanso a url do gateway.");
-            GetDiscordSocketUrlResponse urlRequestResponse = await discordService.GetDiscordSocketUrlAsync(cancellationToken);
-            gatewayUrl = urlRequestResponse.SocketUrl;
-            logger.LogInformation("Url recebida: {url}", gatewayUrl);
-            
             logger.LogInformation("Iniciando tentativa de conexão com o Gateway");
             await socket.ConnectAsync(gatewayUrl, token);
 
