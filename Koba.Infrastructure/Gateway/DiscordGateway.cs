@@ -105,7 +105,7 @@ public class DiscordGateway : IDiscordGateway
                 break;
             case InvalidSessionEvent invalidSessionEvent:
                 logger.LogInformation("Sessão atual inválida. Sessão resumivel? {isResumable}", invalidSessionEvent.CanResume);
-                await Reconnect(invalidSessionEvent.CanResume);
+                await Reconnect(cancellationToken, invalidSessionEvent.CanResume);
                 break;
             default:
                 logger.LogInformation("Evento não é de conexão. Despachando para aplicação.");
@@ -161,15 +161,23 @@ public class DiscordGateway : IDiscordGateway
         logger.LogInformation("HeartBeat enviado.");
     }
 
-    private async Task Reconnect(bool isResumable = false)
+    private async Task Reconnect(CancellationToken cancellationToken, bool isResumable = false)
     {
         using var scope = logger.BeginScope("[RECONNECTION HANDLER]");
-        string url = isResumable && cache.resumeGatewayUrl is not null ? cache.resumeGatewayUrl : config.GatewayUrl;
+        string url = cache.resumeGatewayUrl ?? string.Empty;
         
         Disconnect();
         
         try
         {
+            if (url is "")
+            {
+                logger.LogInformation("Solicitando nova URL de socket.");
+                var requestUrlResult = await discordService.GetDiscordSocketUrlAsync(cancellationToken);
+                url = requestUrlResult.SocketUrl;
+                isResumable = false;
+            }
+            
             logger.LogInformation("Reconectando ao host {url}", url);
             await socket.ConnectAsync(url, socketCancellationTokenSource.Token);
             if (isResumable)
