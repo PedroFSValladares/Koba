@@ -19,11 +19,10 @@ public class DiscordGateway : IDiscordGateway
     private readonly Dictionary<Type, List<Func<object, Task>>> handlers = [];
     private readonly GatewayConfiguration config;
     private CancellationTokenSource socketCancellationTokenSource = new CancellationTokenSource();
-    private readonly IDiscordService discordService;
     
     private Timer heartbeatTimer;
 
-    internal DiscordGateway(IRawSocket socket, ILogger<DiscordGateway> logger, SessionState cache, IOptions<GatewayConfiguration> gatewayConfiguration, IDiscordService discordService)
+    internal DiscordGateway(IRawSocket socket, ILogger<DiscordGateway> logger, SessionState cache, IOptions<GatewayConfiguration> gatewayConfiguration)
     {
         this.socket = socket;
         this.logger = logger;
@@ -32,7 +31,6 @@ public class DiscordGateway : IDiscordGateway
         this.sendMessageChannel = Channel.CreateUnbounded<string>();
         this.receiveMessageChannel = Channel.CreateUnbounded<string>();
         config = gatewayConfiguration.Value;
-        this.discordService = discordService;
     }
     
     public async Task Init(CancellationToken cancellationToken)
