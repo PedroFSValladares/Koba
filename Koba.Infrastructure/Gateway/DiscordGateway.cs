@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Threading.Channels;
 using Koba.Contracts;
+using Koba.Contracts.Dtos;
 using Koba.Contracts.Events;
 using Koba.Contracts.Interfaces;
 using Koba.Contracts.Payloads;
@@ -34,11 +35,11 @@ public class DiscordGateway : IDiscordGateway
         config = gatewayConfiguration.Value;
     }
     
-    public async Task Init(SessionStartLimit sessionStartInfo, CancellationToken cancellationToken)
+    public async Task Init(GatewayInitializationParams gatewayInitializationParams)
     {
         using var scope = logger.BeginScope("[GATEWAY_INIT]");
         string gatewayUrl = config.GatewayUrl;
-        CancellationToken token = socketCancellationTokenSource.Token;
+        CancellationToken token = socketCancellationTokenSource.Token, cancellationToken = socketCancellationTokenSource.Token;
         try
         {
             logger.LogInformation("Iniciando tentativa de conexão com o Gateway");
