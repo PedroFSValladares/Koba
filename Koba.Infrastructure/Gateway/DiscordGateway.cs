@@ -38,7 +38,7 @@ public class DiscordGateway : IDiscordGateway
     public async Task Init(GatewayInitializationParams gatewayInitializationParams)
     {
         using var scope = logger.BeginScope("[GATEWAY_INIT]");
-        string gatewayUrl = config.GatewayUrl;
+        string gatewayUrl = gatewayInitializationParams.SocketUrl;
         CancellationToken token = socketCancellationTokenSource.Token, cancellationToken = socketCancellationTokenSource.Token;
         try
         {
@@ -79,7 +79,7 @@ public class DiscordGateway : IDiscordGateway
         logger.LogInformation("Evento a ser tratado: {eventType}", parsedEvent.GetType());
         
         if (sequencialNumber is not null)
-            cache.sequencialNumber = sequencialNumber;
+            cache.SequencialNumber = sequencialNumber;
 
         switch (parsedEvent)
         {
@@ -167,9 +167,9 @@ public class DiscordGateway : IDiscordGateway
         CancellationToken cancellationToken = (CancellationToken)(state ?? CancellationToken.None);
         int? sequencialNumber = null;
 
-        if (cache.sequencialNumber != null)
+        if (cache.SequencialNumber != null)
         {
-            string cacheValue = cache.sequencialNumber.ToString()!;
+            string cacheValue = cache.SequencialNumber.ToString()!;
              sequencialNumber = Convert.ToInt32(cacheValue);
         }
         
@@ -186,7 +186,7 @@ public class DiscordGateway : IDiscordGateway
     private async Task Reconnect(bool isResumable = false)
     {
         using var scope = logger.BeginScope("[RECONNECTION HANDLER]");
-        string url = isResumable && cache.resumeGatewayUrl is not null ? cache.resumeGatewayUrl : config.GatewayUrl;
+        string url = isResumable && cache.ResumeGatewayUrl is not null ? cache.ResumeGatewayUrl : cache.GatewayUrl;
         
         Disconnect();
         
@@ -198,7 +198,7 @@ public class DiscordGateway : IDiscordGateway
             {
                 logger.LogInformation("Enviando info para reconexão resumida.");
                 
-                ResumeEvent resumeEvent = new ResumeEvent(config.GatewayToken, cache.sessionId, cache.sequencialNumber);
+                ResumeEvent resumeEvent = new ResumeEvent(config.GatewayToken, cache.SessionId, cache.SequencialNumber);
                 string json = JsonSerializer.Serialize(resumeEvent);
                 
                 await socket.SendAsync(json, CancellationToken.None);

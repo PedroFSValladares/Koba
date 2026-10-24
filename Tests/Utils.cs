@@ -34,8 +34,8 @@ internal static class Utils
         var logger = new TestLogger<DiscordGateway>(outputHelper);
         Mock<IOptions<GatewayConfiguration>> options = new Mock<IOptions<GatewayConfiguration>>();
         SessionState sessionState = new SessionState();
-        sessionState.sequencialNumber = sequencialNumber;
-        sessionState.sessionId = "teste";
+        sessionState.SequencialNumber = sequencialNumber;
+        sessionState.SessionId = "teste";
         
         GatewayConfiguration gatewayConfig = new GatewayConfiguration();
         gatewayConfig.GatewayUrl = gatewayUrl;

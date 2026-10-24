@@ -6,7 +6,6 @@ namespace Koba.Infrastructure.Gateway;
 
 internal class GatewayConfiguration
 {
-    internal string GatewayUrl { get; set; }
     internal string GatewayToken { get; set; }
     internal Presence InitialPresence  { get; set; }
     internal DiscordIntents Intent { get; set; }
