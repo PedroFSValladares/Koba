@@ -12,4 +12,6 @@ internal class GatewayConfiguration
     internal int LargeThreshold { get; set; }
     internal bool UseCompression  { get; set; }
     internal AppProperties AppProperties  { get; set; }
+    internal string ReceiveMessageTopicName { get; set; }
+    internal string SendMessageTopicName { get; set; }
 }
