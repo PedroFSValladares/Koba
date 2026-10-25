@@ -12,23 +12,21 @@ internal class Topic<T> : IAsyncDisposable
     private readonly ILogger<Topic<T>> _logger;
     private Task workerTask;
 
-    internal Topic(ILogger<Topic<T>> logger, Func<T, Task>? consumer = null, BoundedChannelOptions? topicConfiguration = null)
+    internal Topic(ILogger<Topic<T>> logger, BoundedChannelOptions? topicConfiguration = null)
     {
         _cancellationTokenSource = new CancellationTokenSource();
-        _consumerCallback = consumer;
         _logger = logger;
         _channel = Channel.CreateBounded<T>(topicConfiguration ?? new BoundedChannelOptions(1000));
     }
     
-    private async Task DoWork()
+    private async Task DoWork(Func<T, Task> consumer)
     {
         using var scope = _logger.BeginScope("[TOPIC WORKER]");
         _logger.LogInformation("Iniciando o Worker");
         try
         {
             await foreach (var item in _channel.Reader.ReadAllAsync(_cancellationTokenSource.Token))
-                await InvokeCallback(item);
-            
+                await InvokeCallback(consumer, item);
         }
         catch (OperationCanceledException e)
         {
@@ -45,9 +43,8 @@ internal class Topic<T> : IAsyncDisposable
         {
             if(_consumerCallback is not null)
                 throw new InvalidOperationException("Já existe um consumidor para esse tópico");
-
-            _consumerCallback = consumer;
-            workerTask = Task.Run(DoWork, _cancellationTokenSource.Token);
+            
+            workerTask = Task.Run(() => DoWork(consumer), _cancellationTokenSource.Token);
         }
     }
 
@@ -56,11 +53,11 @@ internal class Topic<T> : IAsyncDisposable
         await _channel.Writer.WriteAsync(data, cancellationToken);
     }
 
-    private async Task InvokeCallback(T data)
+    private async Task InvokeCallback(Func<T, Task> consumer, T data)
     {
         try
         {
-            await _consumerCallback?.Invoke(data);
+            await consumer.Invoke(data);
         }
         catch (Exception ex)
         {
