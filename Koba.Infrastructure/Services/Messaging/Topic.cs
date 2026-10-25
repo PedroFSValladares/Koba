@@ -44,6 +44,9 @@ internal class Topic<T> : IAsyncDisposable
 
     internal void AddConsumer(Func<T, Task> consumer)
     {
+        if (_cancellationTokenSource is null or { IsCancellationRequested: true })
+            throw new InvalidOperationException("Tópico está sendo ou foi encerradol.");
+        
         lock (consumerLock)
         {
             if(_consumerCallback is not null)
