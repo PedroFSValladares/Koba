@@ -17,7 +17,6 @@ internal class Topic<T> : IDisposable
         _cancellationTokenSource = new CancellationTokenSource();
         _consumerCallback = consumer;
         _logger = logger;
-        workerTask = Task.Run(DoWork, _cancellationTokenSource.Token);
         _channel = Channel.CreateBounded<T>(topicConfiguration ?? new BoundedChannelOptions(1000));
     }
     
@@ -48,6 +47,7 @@ internal class Topic<T> : IDisposable
                 throw new InvalidOperationException("Já existe um consumidor para esse tópico");
 
             _consumerCallback = consumer;
+            workerTask = Task.Run(DoWork, _cancellationTokenSource.Token);
         }
     }
 
