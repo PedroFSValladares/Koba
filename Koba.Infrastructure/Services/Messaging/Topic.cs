@@ -5,10 +5,10 @@ namespace Koba.Infrastructure.Services.Messaging;
 
 internal class Topic<T> : IAsyncDisposable
 {
-    private Channel<T>? _channel;
+    private readonly Channel<T> _channel;
     private Func<T, Task>? _consumerCallback;
     private readonly CancellationTokenSource _cancellationTokenSource;
-    private readonly Lock consumerLock = new(), channelLock = new();
+    private readonly Lock consumerLock = new();
     private readonly ILogger<Topic<T>> _logger;
     private Task workerTask;
 
@@ -51,13 +51,9 @@ internal class Topic<T> : IAsyncDisposable
         }
     }
 
-    internal void CreateAndAddToChannel(T data)
+    internal async Task AddMessage(T data, CancellationToken cancellationToken)
     {
-        lock (channelLock)
-        {
-            _channel ??= Channel.CreateUnbounded<T>();
-        }
-        _channel.Writer.TryWrite(data);
+        await _channel.Writer.WriteAsync(data, cancellationToken);
     }
 
     private async Task InvokeCallback(T data)
