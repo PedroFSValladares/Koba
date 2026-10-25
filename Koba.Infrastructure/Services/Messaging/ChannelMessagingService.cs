@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Threading.Channels;
 using Koba.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -19,21 +20,31 @@ public class ChannelMessagingService<T> : IMessagingService<T>
     public void Subscribe(string topicName, Func<T, Task> callback)
     {
         using var scope = _logger.BeginScope("SUBSCRIBE");
-        ILogger<Topic<T>> topicLogger = _loggerFactory.CreateLogger<Topic<T>>();
         _logger.LogInformation("Subscrição recebida para o tópico {topicName}.", topicName);
+        Topic<T> topic = GetOrCreateTopic(topicName);
         
-        Topic<T> topic = Topics.GetOrAdd(topicName, new Topic<T>(topicLogger));
         topic.AddConsumer(callback);
     }
 
     public void Publish(string topicName, T data)
     {
         using var scope = _logger.BeginScope("PUBLISH");
-        ILogger<Topic<T>> topicLogger = _loggerFactory.CreateLogger<Topic<T>>();
         _logger.LogInformation("Publicando mensagem {data}", data?.ToString());
+        Topic<T> topic = GetOrCreateTopic(topicName);
         
-        Topic<T> topic = Topics.GetOrAdd(topicName, new Topic<T>(topicLogger));
         topic.CreateAndAddToChannel(data);
+    }
+
+    private Topic<T> GetOrCreateTopic(string topicName)
+    {
+        return Topics.GetOrAdd(topicName, x =>
+        {
+            ILogger<Topic<T>> topicLogger = _loggerFactory.CreateLogger<Topic<T>>();
+            return new Topic<T>(topicLogger, topicConfiguration: new BoundedChannelOptions(1000)
+            {
+                FullMode = BoundedChannelFullMode.DropWrite
+            });
+        });
     }
 
 }
