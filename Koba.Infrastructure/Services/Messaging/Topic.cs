@@ -29,13 +29,20 @@ internal class Topic<T> : IDisposable
     
     private async Task DoWork()
     {
-        if(_consumerCallback is null)
-            return;
-        
-        await foreach (var item in _channel.Reader.ReadAllAsync(_cancellationTokenSource.Token))
+        using var scope = _logger.BeginScope("[TOPIC WORKER]");
+        _logger.LogInformation("Iniciando o Worker");
+        try
         {
             await foreach (var item in _channel.Reader.ReadAllAsync(_cancellationTokenSource.Token))
                 await InvokeCallback(item);
+            
+        }
+        catch (OperationCanceledException e)
+        {
+            _logger.LogInformation("Execução do Worker interrompida, despachando ultimas mensagens...");
+            while (_channel?.Reader.TryRead(out T data) ?? false)
+                await InvokeCallback(data);
+            _logger.LogInformation("Pronto. Channel esvaziado.");
         }
     }
 
@@ -73,7 +80,7 @@ internal class Topic<T> : IDisposable
 
     public void Dispose()
     {
+        _channel?.Writer.Complete(new ChannelClosedException("Canal não está mais aberto para recebimento de mensagens."));
         _cancellationTokenSource.Cancel();
-        workerTask.Dispose();
     }
 }
