@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using Microsoft.Extensions.Logging;
 
 namespace Koba.Infrastructure.Services.Messaging;
 
@@ -8,11 +9,21 @@ internal class Topic<T> : IDisposable
     private Func<T, Task>? _consumerCallback;
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly Lock consumerLock = new(), channelLock = new();
+    private readonly ILogger<Topic<T>> _logger;
     private Task workerTask;
 
-    internal Topic()
+    internal Topic(ILogger<Topic<T>> logger)
     {
         _cancellationTokenSource = new CancellationTokenSource();
+        workerTask = Task.Run(DoWork, _cancellationTokenSource.Token);
+        _logger = logger;
+    }
+
+    internal Topic(ILogger<Topic<T>> logger, Func<T, Task> consumer)
+    {
+        _cancellationTokenSource = new CancellationTokenSource();
+        _consumerCallback = consumer;
+        _logger = logger;
         workerTask = Task.Run(DoWork, _cancellationTokenSource.Token);
     }
     
