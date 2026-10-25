@@ -34,7 +34,8 @@ internal class Topic<T> : IDisposable
         
         await foreach (var item in _channel.Reader.ReadAllAsync(_cancellationTokenSource.Token))
         {
-            await _consumerCallback.Invoke(item);
+            await foreach (var item in _channel.Reader.ReadAllAsync(_cancellationTokenSource.Token))
+                await InvokeCallback(item);
         }
     }
 
@@ -56,6 +57,18 @@ internal class Topic<T> : IDisposable
             _channel ??= Channel.CreateUnbounded<T>();
         }
         _channel.Writer.TryWrite(data);
+    }
+
+    private async Task InvokeCallback(T data)
+    {
+        try
+        {
+            await _consumerCallback?.Invoke(data);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,"Não foi possível despachar a mensagem {message}. Motivo: {reason}", data?.ToString(), ex.Message);
+        }
     }
 
     public void Dispose()
