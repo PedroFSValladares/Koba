@@ -27,14 +27,19 @@ internal class Topic<T> : IAsyncDisposable
         {
             await foreach (var item in _channel.Reader.ReadAllAsync(_cancellationTokenSource.Token))
                 await InvokeCallback(consumer, item);
+            _logger.LogInformation("Canal esvaziado.");
         }
-        catch (OperationCanceledException e)
+        catch (OperationCanceledException)
         {
-            _logger.LogInformation("Execução do Worker interrompida, despachando ultimas mensagens...");
-            while (_channel?.Reader.TryRead(out T data) ?? false)
-                await InvokeCallback(data);
-            _logger.LogInformation("Pronto. Channel esvaziado.");
+            int messageCount = _channel.Reader.Count;
+            _logger.LogWarning("Execução do Worker interrompida. {Count} mensagens descartadas.", messageCount);
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao processar o callback: {message}", ex.Message);
+            throw;
+        }
+        _logger.LogInformation("Finalizando o Worker");
     }
 
     internal void AddConsumer(Func<T, Task> consumer)
