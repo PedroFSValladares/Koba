@@ -43,22 +43,25 @@ public class DiscordGateway : IDiscordGateway
         logger.LogInformation("Inicializando Discord Gateway.");
         
         string gatewayUrl = gatewayInitializationParams.SocketUrl,
-            receiveMessageTopicName = config.ReceiveMessageTopicName;
+            receiveMessageTopicName = config.ReceiveMessageTopicName,
+            sendMessageTopicName = config.SendMessageTopicName;
         CancellationToken token = socketCancellationTokenSource.Token, cancellationToken = socketCancellationTokenSource.Token;
         
         if(string.IsNullOrEmpty(receiveMessageTopicName))
             throw new ArgumentNullException(nameof(receiveMessageTopicName), "Nome do tópico de recebimento de mensagems não foi informado.");
+
+        if (string.IsNullOrEmpty(sendMessageTopicName))
+            throw new ArgumentNullException(nameof(sendMessageTopicName), "Nome do tópico de envio de mensagens não foi informado.");
         
         logger.LogInformation("Realizando inscrição no tópico {receiveMessageTopicName}.", receiveMessageTopicName);
         messenger.Subscribe(receiveMessageTopicName, message => DispatchEvent(message, token));
+        logger.LogInformation("Realizando inscrção no tópico {sendMessageTopicName}.", sendMessageTopicName);
+        messenger.Subscribe(sendMessageTopicName, message => socket.SendAsync(message, token));
         
         try
         {
             logger.LogInformation("Iniciando tentativa de conexão com o Gateway");
             await socket.ConnectAsync(gatewayUrl, token);
-            
-            logger.LogInformation("Iniciando Task de envio de mensagens.");
-            _ = Task.Run(() => SendEqueuedMessages(cancellationToken), cancellationToken);
         }
         catch (Exception e)
         {
@@ -285,27 +288,5 @@ public class DiscordGateway : IDiscordGateway
         
         await receiveMessageChannel.Writer.WriteAsync(messageData.Data);
         logger.LogInformation("Mensagem {messageData} enfileirada para processamento.", messageData.Data);
-    }
-
-    private async Task SendEqueuedMessages(CancellationToken cancellationToken)
-    {
-        using var scope = logger.BeginScope("[SEND MESSAGE TASK]");
-        ChannelReader<string> channelReader = sendMessageChannel.Reader;
-        
-        logger.LogInformation("Task de envio iniciada.");
-        while (!cancellationToken.IsCancellationRequested)
-            await foreach (var receivedMessage in channelReader.ReadAllAsync(cancellationToken))
-            {
-                try
-                {
-                    await socket.SendAsync(receivedMessage, cancellationToken);
-                    logger.LogInformation("Evento enviado com sucesso: {receivedMessage}", receivedMessage);
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e, "Erro ao enviar mensagem.");
-                }
-            }
-        logger.LogInformation("Task de envio finalizada.");
     }
 }
