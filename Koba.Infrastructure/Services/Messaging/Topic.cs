@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Koba.Infrastructure.Services.Messaging;
 
-internal class Topic<T> : IDisposable
+internal class Topic<T> : IAsyncDisposable
 {
     private Channel<T>? _channel;
     private Func<T, Task>? _consumerCallback;
@@ -72,9 +72,33 @@ internal class Topic<T> : IDisposable
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        _channel?.Writer.Complete(new ChannelClosedException("Canal não está mais aberto para recebimento de mensagens."));
-        _cancellationTokenSource.Cancel();
+        using var scope = _logger.BeginScope("[TOPIC SHUTDOWN]");
+        
+        _logger.LogInformation("Tentando desligamento suave.");
+
+        try
+        {
+            _channel.Writer.Complete();
+            if (_consumerCallback is not null)
+                await workerTask.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        catch (TimeoutException)
+        {
+            _logger.LogWarning("Timeout no encerramento do Worker, forçando desligamento");
+        }
+        catch (InvalidOperationException)
+        {
+            _logger.LogWarning("Dispose já em execução.");
+        }
+        finally
+        {
+            if (_cancellationTokenSource is { IsCancellationRequested: false })
+            {
+                await _cancellationTokenSource.CancelAsync();
+                _cancellationTokenSource.Dispose();
+            }
+        }
     }
 }
