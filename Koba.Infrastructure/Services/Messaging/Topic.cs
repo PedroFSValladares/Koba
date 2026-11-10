@@ -56,7 +56,7 @@ internal class Topic<T> : IAsyncDisposable
         }
     }
 
-    internal async Task AddMessage(T data, CancellationToken cancellationToken)
+    internal async Task AddMessageAsync(T data, CancellationToken cancellationToken)
     {
         await _channel.Writer.WriteAsync(data, cancellationToken);
     }

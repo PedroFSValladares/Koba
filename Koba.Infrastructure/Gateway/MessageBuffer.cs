@@ -4,32 +4,34 @@ using Microsoft.Extensions.Logging;
 
 namespace Koba.Infrastructure.Gateway;
 
-internal class MessageBuffer : IDisposable
+internal class MessageBuffer : IAsyncDisposable
 {
     private readonly ILogger<MessageBuffer> _logger;
-    private readonly ILoggerFactory _loggerFactory;
     private readonly Topic<string> _messageTopic;
+    private readonly CancellationTokenSource _cancellationTokenSource;
 
     internal MessageBuffer(ILogger<MessageBuffer> logger, Func<string, Task> callback, ILoggerFactory loggerFactory)
     {
         ILogger<Topic<string>> topicLogger = loggerFactory.CreateLogger<Topic<string>>();
         _logger = logger;
-        _messageTopic = new Topic<string>(topicLogger, callback, new BoundedChannelOptions(1000)
+        _messageTopic = new Topic<string>(topicLogger, new BoundedChannelOptions(1000)
         {
             FullMode = BoundedChannelFullMode.Wait
         });
-        _loggerFactory = loggerFactory;
+        _cancellationTokenSource = new CancellationTokenSource();
     }
 
-    internal void Publish(string message)
+    internal async Task PublishAsync(string message, CancellationToken token)
     {
         using var scope = _logger.BeginScope("[MESSAGE PUBLISHING]");
         _logger.LogInformation("Nova mensagem cacheada: {message}", message);
-        _messageTopic.CreateAndAddToChannel(message);
+        await _messageTopic.AddMessageAsync(message, token);
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        _messageTopic.Dispose();
+        using var scope = _logger.BeginScope("[DISPOSING]");
+        _logger.LogInformation("Encerrando buffer.");
+        await _messageTopic.DisposeAsync();
     }
 }

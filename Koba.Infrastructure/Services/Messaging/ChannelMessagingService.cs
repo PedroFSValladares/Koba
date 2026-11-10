@@ -26,13 +26,13 @@ public class ChannelMessagingService<T> : IMessagingService<T>
         topic.AddConsumer(callback);
     }
 
-    public void Publish(string topicName, T data)
+    public async Task PublishAsync(string topicName, T data, CancellationToken token)
     {
-        using var scope = _logger.BeginScope("PUBLISH");
+        using var scope = _logger.BeginScope("[PUBLISH]");
         _logger.LogInformation("Publicando mensagem {data}", data?.ToString());
         Topic<T> topic = GetOrCreateTopic(topicName);
         
-        topic.CreateAndAddToChannel(data);
+        await topic.AddMessageAsync(data, token);
     }
 
     private Topic<T> GetOrCreateTopic(string topicName)

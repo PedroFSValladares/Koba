@@ -16,7 +16,11 @@ public static class InfrastructureExtensions
         SessionState cache = new SessionState();
         services.AddScoped<IRawSocket, SocketClient>()
             .AddSingleton<IDiscordGateway, DiscordGateway>(x => new DiscordGateway(
-                x.GetRequiredService<IRawSocket>(), x.GetRequiredService<ILogger<DiscordGateway>>(), cache, x.GetRequiredService<IOptions<GatewayConfiguration>>()));
+                x.GetRequiredService<IRawSocket>(),
+                x.GetRequiredService<ILogger<DiscordGateway>>(),
+                cache,
+                x.GetRequiredService<IOptions<GatewayConfiguration>>(),
+                x.GetRequiredService<IMessagingService<string>>()));
         
         return services;
     }
