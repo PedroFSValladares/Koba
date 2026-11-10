@@ -6,7 +6,6 @@ namespace Koba.Infrastructure.Services.Messaging;
 internal class Topic<T> : IAsyncDisposable
 {
     private readonly Channel<T> _channel;
-    private Func<T, Task>? _consumerCallback;
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly Lock consumerLock = new();
     private readonly ILogger<Topic<T>> _logger;
@@ -49,7 +48,7 @@ internal class Topic<T> : IAsyncDisposable
         
         lock (consumerLock)
         {
-            if(_consumerCallback is not null)
+            if(workerTask is not null)
                 throw new InvalidOperationException("Já existe um consumidor para esse tópico");
             
             workerTask = Task.Run(() => DoWork(consumer), _cancellationTokenSource.Token);
@@ -82,7 +81,7 @@ internal class Topic<T> : IAsyncDisposable
         try
         {
             _channel.Writer.Complete();
-            if (_consumerCallback is not null)
+            if (workerTask is {AsyncState: TaskStatus.Running})
                 await workerTask.WaitAsync(TimeSpan.FromSeconds(5));
         }
         catch (TimeoutException)
