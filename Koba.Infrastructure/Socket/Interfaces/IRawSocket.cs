@@ -1,6 +1,4 @@
-﻿using System.Threading.Channels;
-
-namespace Koba.Infrastructure.Socket.Interfaces;
+﻿namespace Koba.Infrastructure.Socket.Interfaces;
 
 internal interface IRawSocket
 {

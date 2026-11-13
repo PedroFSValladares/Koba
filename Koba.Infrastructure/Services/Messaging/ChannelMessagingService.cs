@@ -7,7 +7,7 @@ namespace Koba.Infrastructure.Services.Messaging;
 
 public class ChannelMessagingService<T> : IMessagingService<T>
 {
-    private readonly ConcurrentDictionary<string ,Topic<T>> Topics = [];
+    private readonly ConcurrentDictionary<string, Topic<T>> Topics = [];
     private readonly ILogger<ChannelMessagingService<T>> _logger;
     private readonly ILoggerFactory _loggerFactory;
 
@@ -16,13 +16,13 @@ public class ChannelMessagingService<T> : IMessagingService<T>
         _logger = logger;
         _loggerFactory = loggerFactory;
     }
-    
+
     public void Subscribe(string topicName, Func<T, Task> callback)
     {
         using var scope = _logger.BeginScope("SUBSCRIBE");
         _logger.LogInformation("Subscrição recebida para o tópico {topicName}.", topicName);
-        Topic<T> topic = GetOrCreateTopic(topicName);
-        
+        var topic = GetOrCreateTopic(topicName);
+
         topic.AddConsumer(callback);
     }
 
@@ -30,8 +30,8 @@ public class ChannelMessagingService<T> : IMessagingService<T>
     {
         using var scope = _logger.BeginScope("[PUBLISH]");
         _logger.LogInformation("Publicando mensagem {data}", data?.ToString());
-        Topic<T> topic = GetOrCreateTopic(topicName);
-        
+        var topic = GetOrCreateTopic(topicName);
+
         await topic.AddMessageAsync(data, token);
     }
 
@@ -39,12 +39,11 @@ public class ChannelMessagingService<T> : IMessagingService<T>
     {
         return Topics.GetOrAdd(topicName, x =>
         {
-            ILogger<Topic<T>> topicLogger = _loggerFactory.CreateLogger<Topic<T>>();
-            return new Topic<T>(topicLogger, topicConfiguration: new BoundedChannelOptions(1000)
+            var topicLogger = _loggerFactory.CreateLogger<Topic<T>>();
+            return new Topic<T>(topicLogger, new BoundedChannelOptions(1000)
             {
                 FullMode = BoundedChannelFullMode.DropWrite
             });
         });
     }
-
 }

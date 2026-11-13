@@ -13,7 +13,7 @@ public static class InfrastructureExtensions
 {
     public static IServiceCollection AddDiscordGateway(this IServiceCollection services, IConfiguration configuration)
     {
-        SessionState cache = new SessionState();
+        var cache = new SessionState();
         services.AddScoped<IRawSocket, SocketClient>()
             .AddSingleton<IDiscordGateway, DiscordGateway>(x => new DiscordGateway(
                 x.GetRequiredService<IRawSocket>(),
@@ -21,7 +21,7 @@ public static class InfrastructureExtensions
                 cache,
                 x.GetRequiredService<IOptions<GatewayConfiguration>>(),
                 x.GetRequiredService<IMessagingService<string>>()));
-        
+
         return services;
     }
 }

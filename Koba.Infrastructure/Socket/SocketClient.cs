@@ -1,124 +1,122 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
-using System.Threading.Channels;
 using Koba.Infrastructure.Socket.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace Koba.Infrastructure.Socket
+namespace Koba.Infrastructure.Socket;
+
+internal class SocketClient : IRawSocket
 {
-    internal class SocketClient : IRawSocket
+    private readonly ILogger<SocketClient> _logger;
+    private readonly int _bufferSize = 2048;
+
+    private ClientWebSocket? _client;
+
+    internal SocketClient(ILogger<SocketClient> logger)
     {
-        public event Func<OnMessageReceivedData, Task> OnMessageReceived;
-        public event Func<IRawSocket, Task> OnConnectionClosed;
-        
-        private ClientWebSocket? client; 
-        private int bufferSize = 2048;
-        
-        private readonly ILogger<SocketClient> logger;
+        _logger = logger;
+    }
 
-        internal SocketClient(ILogger<SocketClient> logger)
+    public event Func<OnMessageReceivedData, Task> OnMessageReceived;
+    public event Func<IRawSocket, Task> OnConnectionClosed;
+
+    public async Task ConnectAsync(string url, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(url))
+            throw new ArgumentNullException(nameof(url), "A URL fornecida não deve ser nula.");
+
+        using var scope = _logger.BeginScope("[SOCKET CONNECTION]");
+        var uri = new Uri(url);
+
+        _client?.Dispose();
+        try
         {
-            this.logger = logger;
-        }
-        
-        internal void Close() {
-            client.Abort();
-        }
+            _client = new ClientWebSocket();
+            _logger.LogInformation("Preparando para se conectar ao host {url}.", url);
+            await _client.ConnectAsync(uri, cancellationToken);
+            _logger.LogInformation("Conectado ao host com sucesso.");
 
-        public async Task ConnectAsync(string url, CancellationToken cancellationToken)
+            _ = Task.Run(() => BeginListenAsync(cancellationToken), cancellationToken);
+        }
+        catch (OperationCanceledException ex)
         {
-            if (string.IsNullOrEmpty(url))
-                throw new ArgumentNullException(nameof(url), "A URL fornecida não deve ser nula.");
-            
-            using var scope = logger.BeginScope("[SOCKET CONNECTION]");
-            Uri uri = new Uri(url);
-            
-            client?.Dispose();
-            try
-            {
-                client = new ClientWebSocket();
-                logger.LogInformation("Preparando para se conectar ao host {url}.", url);
-                await client.ConnectAsync(uri, cancellationToken);
-                logger.LogInformation("Conectado ao host com sucesso.");
-                
-                _ = Task.Run(() => BeginListenAsync(cancellationToken), cancellationToken);
-            }
-            catch (OperationCanceledException ex)
-            {
-                logger.LogInformation("Operação de conecção interrompida. Não foi possível conectar ao host.");
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Erro desconhecido ao tentar conectar ao host: {mesage}",ex.Message);
-                throw;
-            }
-                    
+            _logger.LogInformation("Operação de conecção interrompida. Não foi possível conectar ao host.");
         }
-
-        private async Task BeginListenAsync(CancellationToken cancellationToken)
+        catch (Exception ex)
         {
-            using var scope = logger.BeginScope("[SOCKET LISTENNER]");
-            byte[] buffer = new byte[bufferSize];
-            Memory<byte> receiveBuffer = new Memory<byte>(buffer);
-            List<byte> received = new List<byte>();
-            ValueWebSocketReceiveResult result;
-            
-            logger.LogInformation("Iniciando linstenner.");
+            _logger.LogError(ex, "Erro desconhecido ao tentar conectar ao host: {mesage}", ex.Message);
+            throw;
+        }
+    }
 
-            try
+    public async Task SendAsync(string message, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Task de envio iniciada");
+        var buffer = Encoding.UTF8.GetBytes(message);
+
+        if (_client.State != WebSocketState.Open && !cancellationToken.IsCancellationRequested)
+            throw new InvalidOperationException(
+                "Conexão do socket foi encerrada, não é possível enviar a mensagem");
+
+        await _client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, cancellationToken);
+
+        _logger.LogInformation("Mensagem enviada com sucesso");
+    }
+
+    internal void Close()
+    {
+        _client.Abort();
+    }
+
+    private async Task BeginListenAsync(CancellationToken cancellationToken)
+    {
+        using var scope = _logger.BeginScope("[SOCKET LISTENNER]");
+        var buffer = new byte[_bufferSize];
+        var receiveBuffer = new Memory<byte>(buffer);
+        var received = new List<byte>();
+        ValueWebSocketReceiveResult result;
+
+        _logger.LogInformation("Iniciando linstenner.");
+
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
             {
-                while (!cancellationToken.IsCancellationRequested)
+                do
                 {
-                    do
+                    result = await _client.ReceiveAsync(receiveBuffer, cancellationToken);
+
+                    if (result.MessageType is WebSocketMessageType.Close)
                     {
-                        result = await client.ReceiveAsync(receiveBuffer, cancellationToken);
+                        await _client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty,
+                            cancellationToken);
+                        throw new OperationCanceledException("Conexão encerrada pelo host remoto.");
+                    }
 
-                        if (result.MessageType is WebSocketMessageType.Close)
-                        {
-                            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty,
-                                cancellationToken);
-                            throw new OperationCanceledException("Conexão encerrada pelo host remoto.");
-                        }
+                    received.AddRange(new ArraySegment<byte>(buffer, 0, result.Count));
+                } while (!result.EndOfMessage);
 
-                        received.AddRange(new ArraySegment<byte>(buffer, 0, result.Count));
-                    } while (!result.EndOfMessage);
+                var jsonPaylod = Encoding.UTF8.GetString(received.ToArray());
+                _logger.LogDebug($"Payload recebido: {jsonPaylod}.");
 
-                    string jsonPaylod = Encoding.UTF8.GetString(received.ToArray());
-                    logger.LogDebug($"Payload recebido: {jsonPaylod}.");
+                var messageData = new OnMessageReceivedData(jsonPaylod, cancellationToken);
+                _ = Task.Run(() => OnMessageReceived?.Invoke(messageData), cancellationToken);
 
-                    OnMessageReceivedData messageData = new OnMessageReceivedData(jsonPaylod, cancellationToken);
-                    _ = Task.Run(() => OnMessageReceived?.Invoke(messageData), cancellationToken);
-
-                    received.Clear();
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                logger.LogInformation("Execução do socket foi encerrada.");
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex.Message, ex);
-            }
-            finally
-            {
-                _ = Task.Run(() => OnConnectionClosed?.Invoke(this), CancellationToken.None);
-                logger.LogInformation("Listener finalizado.");
+                received.Clear();
             }
         }
-
-        public async Task SendAsync(string message, CancellationToken cancellationToken)
+        catch (OperationCanceledException)
         {
-            logger.LogInformation($"Task de envio iniciada");
-            var buffer = Encoding.UTF8.GetBytes(message);
-            
-            if(client.State != WebSocketState.Open && !cancellationToken.IsCancellationRequested)
-                throw new InvalidOperationException(
-                    "Conexão do socket foi encerrada, não é possível enviar a mensagem");
-            
-            await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, cancellationToken);
-           
-            logger.LogInformation("Mensagem enviada com sucesso");
+            _logger.LogInformation("Execução do socket foi encerrada.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message, ex);
+        }
+        finally
+        {
+            _ = Task.Run(() => OnConnectionClosed?.Invoke(this), CancellationToken.None);
+            _logger.LogInformation("Listener finalizado.");
         }
     }
 }

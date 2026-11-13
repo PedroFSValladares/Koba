@@ -5,10 +5,10 @@ namespace Koba.Infrastructure.Services.Messaging;
 
 internal class Topic<T> : IAsyncDisposable
 {
-    private readonly Channel<T> _channel;
     private readonly CancellationTokenSource _cancellationTokenSource;
-    private readonly Lock consumerLock = new();
+    private readonly Channel<T> _channel;
     private readonly ILogger<Topic<T>> _logger;
+    private readonly Lock consumerLock = new();
     private Task workerTask;
 
     internal Topic(ILogger<Topic<T>> logger, BoundedChannelOptions? topicConfiguration = null)
@@ -17,71 +17,17 @@ internal class Topic<T> : IAsyncDisposable
         _logger = logger;
         _channel = Channel.CreateBounded<T>(topicConfiguration ?? new BoundedChannelOptions(1000));
     }
-    
-    private async Task DoWork(Func<T, Task> consumer)
-    {
-        using var scope = _logger.BeginScope("[TOPIC WORKER]");
-        _logger.LogInformation("Iniciando o Worker");
-        try
-        {
-            await foreach (var item in _channel.Reader.ReadAllAsync(_cancellationTokenSource.Token))
-                await InvokeCallback(consumer, item);
-            _logger.LogInformation("Canal esvaziado.");
-        }
-        catch (OperationCanceledException)
-        {
-            int messageCount = _channel.Reader.Count;
-            _logger.LogWarning("Execução do Worker interrompida. {Count} mensagens descartadas.", messageCount);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao processar o callback: {message}", ex.Message);
-            throw;
-        }
-        _logger.LogInformation("Finalizando o Worker");
-    }
-
-    internal void AddConsumer(Func<T, Task> consumer)
-    {
-        if (_cancellationTokenSource is null or { IsCancellationRequested: true })
-            throw new InvalidOperationException("Tópico está sendo ou foi encerradol.");
-        
-        lock (consumerLock)
-        {
-            if(workerTask is not null)
-                throw new InvalidOperationException("Já existe um consumidor para esse tópico");
-            
-            workerTask = Task.Run(() => DoWork(consumer), _cancellationTokenSource.Token);
-        }
-    }
-
-    internal async Task AddMessageAsync(T data, CancellationToken cancellationToken)
-    {
-        await _channel.Writer.WriteAsync(data, cancellationToken);
-    }
-
-    private async Task InvokeCallback(Func<T, Task> consumer, T data)
-    {
-        try
-        {
-            await consumer.Invoke(data);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,"Não foi possível despachar a mensagem {message}. Motivo: {reason}", data?.ToString(), ex.Message);
-        }
-    }
 
     public async ValueTask DisposeAsync()
     {
         using var scope = _logger.BeginScope("[TOPIC SHUTDOWN]");
-        
+
         _logger.LogInformation("Tentando desligamento suave.");
 
         try
         {
             _channel.Writer.Complete();
-            if (workerTask is {AsyncState: TaskStatus.Running})
+            if (workerTask is { AsyncState: TaskStatus.Running })
                 await workerTask.WaitAsync(TimeSpan.FromSeconds(5));
         }
         catch (TimeoutException)
@@ -99,6 +45,62 @@ internal class Topic<T> : IAsyncDisposable
                 await _cancellationTokenSource.CancelAsync();
                 _cancellationTokenSource.Dispose();
             }
+        }
+    }
+
+    private async Task DoWork(Func<T, Task> consumer)
+    {
+        using var scope = _logger.BeginScope("[TOPIC WORKER]");
+        _logger.LogInformation("Iniciando o Worker");
+        try
+        {
+            await foreach (var item in _channel.Reader.ReadAllAsync(_cancellationTokenSource.Token))
+                await InvokeCallback(consumer, item);
+            _logger.LogInformation("Canal esvaziado.");
+        }
+        catch (OperationCanceledException)
+        {
+            var messageCount = _channel.Reader.Count;
+            _logger.LogWarning("Execução do Worker interrompida. {Count} mensagens descartadas.", messageCount);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao processar o callback: {message}", ex.Message);
+            throw;
+        }
+
+        _logger.LogInformation("Finalizando o Worker");
+    }
+
+    internal void AddConsumer(Func<T, Task> consumer)
+    {
+        if (_cancellationTokenSource is null or { IsCancellationRequested: true })
+            throw new InvalidOperationException("Tópico está sendo ou foi encerradol.");
+
+        lock (consumerLock)
+        {
+            if (workerTask is not null)
+                throw new InvalidOperationException("Já existe um consumidor para esse tópico");
+
+            workerTask = Task.Run(() => DoWork(consumer), _cancellationTokenSource.Token);
+        }
+    }
+
+    internal async Task AddMessageAsync(T data, CancellationToken cancellationToken)
+    {
+        await _channel.Writer.WriteAsync(data, cancellationToken);
+    }
+
+    private async Task InvokeCallback(Func<T, Task> consumer, T data)
+    {
+        try
+        {
+            await consumer.Invoke(data);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Não foi possível despachar a mensagem {message}. Motivo: {reason}", data?.ToString(),
+                ex.Message);
         }
     }
 }

@@ -2,8 +2,8 @@
 
 public class SessionState
 {
+    public string GatewayUrl;
+    public string? ResumeGatewayUrl;
     public int? SequencialNumber;
     public string? SessionId;
-    public string? ResumeGatewayUrl;
-    public string GatewayUrl;
 }
