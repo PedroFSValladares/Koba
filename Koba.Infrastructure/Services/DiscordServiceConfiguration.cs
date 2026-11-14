@@ -2,6 +2,7 @@
 
 internal class DiscordServiceConfiguration
 {
-    internal string BaseUrl { get; }
-    internal string BotToken { get; }
+    internal const string Section = "DiscordServiceConfiguration";
+    internal string BaseAddress { get; init; }
+    internal string Token { get; init; }
 }
