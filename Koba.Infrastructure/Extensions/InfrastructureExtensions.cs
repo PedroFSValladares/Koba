@@ -1,5 +1,6 @@
 ﻿using Koba.Contracts.Interfaces;
 using Koba.Infrastructure.Gateway;
+using Koba.Infrastructure.Services;
 using Koba.Infrastructure.Socket;
 using Koba.Infrastructure.Socket.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -22,6 +23,21 @@ public static class InfrastructureExtensions
                 x.GetRequiredService<IOptions<GatewayConfiguration>>(),
                 x.GetRequiredService<IMessagingService<string>>()));
 
+        return services;
+    }
+    
+    public static IServiceCollection AddDiscordServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<DiscordServiceConfiguration>()
+            .Bind(configuration.GetSection(DiscordServiceConfiguration.Section));
+        
+        services.AddHttpClient<IDiscordService, DiscordService>((serviceProvider, client) =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<DiscordServiceConfiguration>>().Value;
+            
+            client.BaseAddress = new Uri(options.BaseAddress);
+            client.DefaultRequestHeaders.Add("Authorization", $"Bot {options.Token}");
+        });
         return services;
     }
 }
