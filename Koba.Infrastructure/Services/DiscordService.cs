@@ -7,8 +7,6 @@ namespace Koba.Infrastructure.Services;
 
 public class DiscordService : IDiscordService
 {
-    private readonly DiscordServiceConfiguration _discordServiceConfiguration;
-
     private readonly HttpClient _httpClient;
     private readonly ILogger<DiscordService> _logger;
 
@@ -21,13 +19,10 @@ public class DiscordService : IDiscordService
     public async Task<GetDiscordSocketUrlResponse> GetDiscordSocketUrlAsync(CancellationToken cancellationToken)
     {
         using var scope = _logger.BeginScope("[GET SOCKET URL]");
-        var botToken = _discordServiceConfiguration.BotToken;
         HttpResponseMessage result;
         var response = new GetDiscordSocketUrlResponse();
 
         _logger.LogInformation("Buscando url e informações do Gateway.");
-
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bot {botToken}");
 
         try
         {
